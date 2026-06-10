@@ -13,13 +13,13 @@ class BibleScreen extends StatefulWidget {
 
 class _BibleScreenState extends State<BibleScreen> {
   bool isLoading = true;
-  late PageController _pageController;
   int _currentPageIndex = 0;
+  final ScrollController _scrollController = ScrollController();
+  final Map<int, GlobalKey> _verseKeys = {};
 
   @override
   void initState() {
     super.initState();
-    _pageController = PageController(initialPage: 0);
     _loadData();
   }
 
@@ -41,11 +41,57 @@ class _BibleScreenState extends State<BibleScreen> {
       backgroundColor: Colors.transparent,
       builder: (context) => ChapterSelectorSheet(
         initialBook: currentBook,
-        onChapterSelected: (index) {
-          _pageController.jumpToPage(index);
+        onVerseSelected: (index, verse) {
+          setState(() {
+            _currentPageIndex = index;
+          });
+          
+          // 새 장이 렌더링된 후 해당 절로 스크롤
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            _scrollToVerse(verse);
+          });
         },
       ),
     );
+  }
+
+  void _scrollToVerse(int verse) {
+    final key = _verseKeys[verse];
+    if (key != null && key.currentContext != null) {
+      Scrollable.ensureVisible(
+        key.currentContext!,
+        duration: const Duration(milliseconds: 300),
+        curve: Curves.easeInOut,
+        alignment: 0.1, // 약간 위쪽으로 여유를 줌
+      );
+    }
+  }
+
+  void _goToNextChapter() {
+    if (_currentPageIndex < BibleRepository.allChapters.length - 1) {
+      setState(() {
+        _currentPageIndex++;
+        // 스와이프 시 항상 맨 위로
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_scrollController.hasClients) {
+            _scrollController.jumpTo(0);
+          }
+        });
+      });
+    }
+  }
+
+  void _goToPrevChapter() {
+    if (_currentPageIndex > 0) {
+      setState(() {
+        _currentPageIndex--;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (_scrollController.hasClients) {
+            _scrollController.jumpTo(0);
+          }
+        });
+      });
+    }
   }
 
   @override
@@ -59,6 +105,13 @@ class _BibleScreenState extends State<BibleScreen> {
     }
 
     final currentEntry = BibleRepository.allChapters[_currentPageIndex];
+    final verses = BibleRepository.getChapterVerses(currentEntry.key, currentEntry.value);
+
+    // 각 절마다 고유한 GlobalKey 생성 (스크롤 점프용)
+    _verseKeys.clear();
+    for (var v in verses) {
+      _verseKeys[v.verse] = GlobalKey();
+    }
 
     return Scaffold(
       appBar: AppBar(
@@ -67,7 +120,7 @@ class _BibleScreenState extends State<BibleScreen> {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('${currentEntry.key} ${currentEntry.value}장'),
+              Text('${BibleRepository.getFullName(currentEntry.key)} ${currentEntry.value}장'),
               const SizedBox(width: 4),
               const Icon(Icons.arrow_drop_down),
             ],
@@ -75,28 +128,35 @@ class _BibleScreenState extends State<BibleScreen> {
         ),
         centerTitle: true,
       ),
-      body: PageView.builder(
-        controller: _pageController,
-        onPageChanged: (index) {
-          setState(() {
-            _currentPageIndex = index;
-          });
+      body: GestureDetector(
+        onHorizontalDragEnd: (details) {
+          if (details.primaryVelocity != null) {
+            if (details.primaryVelocity! < -300) {
+              // 왼쪽으로 스와이프 (다음 장)
+              _goToNextChapter();
+            } else if (details.primaryVelocity! > 300) {
+              // 오른쪽으로 스와이프 (이전 장)
+              _goToPrevChapter();
+            }
+          }
         },
-        itemCount: BibleRepository.allChapters.length,
-        itemBuilder: (context, index) {
-          final entry = BibleRepository.allChapters[index];
-          final verses = BibleRepository.getChapterVerses(entry.key, entry.value);
-          
-          return ListView.separated(
-            key: PageStorageKey<String>('${entry.key}_${entry.value}'),
+        child: Container(
+          color: Colors.transparent, // GestureDetector가 빈 공간의 터치도 감지하게 함
+          child: SingleChildScrollView(
+            controller: _scrollController,
             padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
-            itemCount: verses.length,
-            separatorBuilder: (context, idx) => const SizedBox(height: 20),
-            itemBuilder: (context, idx) {
-              return VerseWidget(verse: verses[idx]);
-            },
-          );
-        },
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: verses.map((verse) {
+                return Padding(
+                  key: _verseKeys[verse.verse],
+                  padding: const EdgeInsets.only(bottom: 20.0),
+                  child: VerseWidget(verse: verse),
+                );
+              }).toList(),
+            ),
+          ),
+        ),
       ),
     );
   }
