@@ -3,6 +3,8 @@ import '../../features/bible/presentation/bible_screen.dart';
 import '../../features/library/presentation/library_screen.dart';
 import '../../features/bible/data/highlight_model.dart';
 
+import '../../features/guide/presentation/today_meditation_screen.dart';
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
@@ -27,7 +29,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _onNavigateToLibraryHighlight(HighlightModel highlight) {
     setState(() {
-      _currentIndex = 1; // 보관함 탭
+      _currentIndex = 2; // 보관함 탭은 이제 2번 인덱스
     });
     Future.delayed(const Duration(milliseconds: 100), () {
       _libraryScreenKey.currentState?.openHighlightDetail(highlight);
@@ -41,6 +43,7 @@ class _HomeScreenState extends State<HomeScreen> {
         index: _currentIndex,
         children: [
           BibleScreen(key: _bibleScreenKey, onNavigateToLibraryHighlight: _onNavigateToLibraryHighlight),
+          const TodayMeditationScreen(), // 새로 추가된 가이드 화면
           LibraryScreen(key: _libraryScreenKey, onNavigateToBible: _onNavigateToBible),
         ],
       ),
@@ -50,7 +53,7 @@ class _HomeScreenState extends State<HomeScreen> {
           setState(() {
             _currentIndex = index;
           });
-          if (index == 1) {
+          if (index == 2) {
             _libraryScreenKey.currentState?.loadData();
           }
         },
@@ -58,6 +61,10 @@ class _HomeScreenState extends State<HomeScreen> {
           BottomNavigationBarItem(
             icon: Icon(Icons.menu_book),
             label: '성경',
+          ),
+          BottomNavigationBarItem(
+            icon: Icon(Icons.explore),
+            label: '오늘의 묵상',
           ),
           BottomNavigationBarItem(
             icon: Icon(Icons.library_books),

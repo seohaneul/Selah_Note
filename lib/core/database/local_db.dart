@@ -3,6 +3,7 @@ import 'package:path_provider/path_provider.dart';
 import '../../features/bible/data/highlight_model.dart';
 import '../../features/memo/data/memo_model.dart';
 import '../../features/memo/data/question_model.dart';
+import '../../features/guide/data/daily_meditation_model.dart';
 import '../../features/bible/data/bible_repository.dart';
 
 class LocalDb {
@@ -11,7 +12,7 @@ class LocalDb {
   static Future<void> initialize() async {
     final dir = await getApplicationDocumentsDirectory();
     isar = await Isar.open(
-      [HighlightModelSchema, MemoSchema, QuestionModelSchema],
+      [HighlightModelSchema, MemoSchema, QuestionModelSchema, DailyMeditationModelSchema],
       directory: dir.path,
     );
     
