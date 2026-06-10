@@ -1,6 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application
-        android:label="selah_note"
+        android:label="말씀조각"
         android:name="${applicationName}"
         android:icon="@mipmap/launcher_icon">
         <activity
