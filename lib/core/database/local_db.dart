@@ -15,11 +15,7 @@ class LocalDb {
       directory: dir.path,
     );
     
-    // V2 마이그레이션: 기존 스키마 구조가 완전히 달라졌으므로 초기화
-    await isar.writeTxn(() async {
-      await isar.clear();
-    });
-    
-    print("Local DB (Isar) initialized and wiped for V2.");
+    // V2 마이그레이션을 위한 초기화 코드는 삭제했습니다. 이제 데이터가 보존됩니다.
+    print("Local DB (Isar) initialized for V2.");
   }
 }

@@ -4,6 +4,7 @@ import '../../memo/data/memo_model.dart';
 import '../../memo/data/question_model.dart';
 import '../../bible/data/highlight_model.dart';
 import '../../memo/presentation/widgets/question_detail_sheet.dart';
+import '../../bible/data/bible_repository.dart';
 import '../../../core/database/local_db.dart'; 
 
 class LibraryScreen extends StatefulWidget {
@@ -12,37 +13,106 @@ class LibraryScreen extends StatefulWidget {
   const LibraryScreen({Key? key, required this.onNavigateToBible}) : super(key: key);
 
   @override
-  State<LibraryScreen> createState() => _LibraryScreenState();
+  State<LibraryScreen> createState() => LibraryScreenState();
 }
 
-class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProviderStateMixin {
+class LibraryScreenState extends State<LibraryScreen> with SingleTickerProviderStateMixin {
   late TabController _tabController;
   List<Memo> _memos = [];
   List<QuestionModel> _questions = [];
   List<HighlightModel> _highlights = [];
   bool _isLoading = true;
 
+  // 필터 상태
+  String _sortOrder = '최신순'; // 최신순, 오래된순, 성경 순서별
+  String _selectedBook = '전체 보기';
+  String _questionStatus = '전체 보기'; // 전체 보기, 미해결, 해결 완료
+
+  List<String> get _availableBooks {
+    return ['전체 보기', ...BibleRepository.bookFullNames.values];
+  }
+
   @override
   void initState() {
     super.initState();
     _tabController = TabController(length: 3, vsync: this);
-    _loadData();
+    loadData();
     _tabController.addListener(() {
       if (_tabController.indexIsChanging) return;
-      _loadData(); 
+      setState(() {}); // 탭 전환 시 필터 바 업데이트
     });
   }
 
-  Future<void> _loadData() async {
-    setState(() => _isLoading = true);
-    
-    _memos = await LocalDb.isar.memos.where().sortByCreatedAtDesc().findAll();
-    _questions = await LocalDb.isar.questionModels.where().sortByCreatedAtDesc().findAll();
-    _highlights = await LocalDb.isar.highlightModels.where().sortByCreatedAtDesc().findAll();
-    
-    setState(() => _isLoading = false);
+  int _getBookOrder(String name) {
+    final fullName = BibleRepository.getFullName(name) ?? name;
+    final list = BibleRepository.bookFullNames.values.toList();
+    final idx = list.indexOf(fullName);
+    return idx == -1 ? 999 : idx;
   }
 
+  int _compareBibleOrder(String bookA, int chapA, int verseA, String bookB, int chapB, int verseB) {
+    final orderA = _getBookOrder(bookA);
+    final orderB = _getBookOrder(bookB);
+    if (orderA != orderB) return orderA.compareTo(orderB);
+    if (chapA != chapB) return chapA.compareTo(chapB);
+    return verseA.compareTo(verseB);
+  }
+
+  Future<void> loadData() async {
+    setState(() => _isLoading = true);
+    
+    List<Memo> allMemos = await LocalDb.isar.memos.where().findAll();
+    List<QuestionModel> allQuestions = await LocalDb.isar.questionModels.where().findAll();
+    List<HighlightModel> allHighlights = await LocalDb.isar.highlightModels.where().findAll();
+
+    // 1. 성경 권 별 필터링
+    if (_selectedBook != '전체 보기') {
+      allMemos = allMemos.where((m) => BibleRepository.getFullName(m.bookName) == _selectedBook || m.bookName == _selectedBook).toList();
+      allHighlights = allHighlights.where((h) => BibleRepository.getFullName(h.bookName) == _selectedBook || h.bookName == _selectedBook).toList();
+      allQuestions = allQuestions.where((q) => q.bibleTags.any((tag) => tag.startsWith(_selectedBook))).toList();
+    }
+
+    // 2. 질문 상태 필터링
+    if (_questionStatus != '전체 보기') {
+      final isResolvedTarget = _questionStatus == '해결 완료';
+      allQuestions = allQuestions.where((q) => q.isResolved == isResolvedTarget).toList();
+    }
+
+    // 3. 정렬 (공통)
+    if (_sortOrder == '성경 순서별') {
+      allMemos.sort((a, b) => _compareBibleOrder(a.bookName, a.chapter, a.verse, b.bookName, b.chapter, b.verse));
+      allHighlights.sort((a, b) => _compareBibleOrder(a.bookName, a.chapter, a.verse, b.bookName, b.chapter, b.verse));
+      allQuestions.sort((a, b) {
+        if (a.bibleTags.isEmpty || b.bibleTags.isEmpty) return 0;
+        // 아주 단순화된 파싱 로직 (요한복음 3:16)
+        try {
+          final partsA = a.bibleTags.first.split(' ');
+          final partsB = b.bibleTags.first.split(' ');
+          final cvA = partsA.last.split(':');
+          final cvB = partsB.last.split(':');
+          return _compareBibleOrder(partsA.first, int.parse(cvA[0]), int.parse(cvA[1]), partsB.first, int.parse(cvB[0]), int.parse(cvB[1]));
+        } catch (_) {
+          return a.createdAt.compareTo(b.createdAt);
+        }
+      });
+    } else {
+      final ascending = _sortOrder == '오래된순';
+      allMemos.sort((a, b) => ascending ? a.createdAt.compareTo(b.createdAt) : b.createdAt.compareTo(a.createdAt));
+      allHighlights.sort((a, b) => ascending ? a.createdAt.compareTo(b.createdAt) : b.createdAt.compareTo(a.createdAt));
+      allQuestions.sort((a, b) => ascending ? a.createdAt.compareTo(b.createdAt) : b.createdAt.compareTo(a.createdAt));
+    }
+
+    if (mounted) {
+      setState(() {
+        _memos = allMemos;
+        _questions = allQuestions;
+        _highlights = allHighlights;
+        _isLoading = false;
+      });
+    }
+  }
+
+  // --- 기존의 _showMemoOptions 등 팝업 코드 유지 ---
   void _showMemoOptions(Memo memo) {
     showModalBottomSheet(
       context: context,
@@ -68,7 +138,7 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
                     await LocalDb.isar.memos.delete(memo.id);
                   });
                   Navigator.pop(context);
-                  _loadData();
+                  loadData();
                 },
               ),
             ],
@@ -103,7 +173,7 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
                     await LocalDb.isar.highlightModels.delete(highlight.id);
                   });
                   Navigator.pop(context);
-                  _loadData();
+                  loadData();
                 },
               ),
             ],
@@ -113,8 +183,11 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
     );
   }
 
+  // --- UI 렌더링 ---
   @override
   Widget build(BuildContext context) {
+    final isQuestionTab = _tabController.index == 1;
+
     return Scaffold(
       appBar: AppBar(
         title: const Text('내 보관함'),
@@ -128,16 +201,89 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
           ],
         ),
       ),
-      body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
-          : TabBarView(
-              controller: _tabController,
-              children: [
-                _buildMemoList(),
-                _buildQuestionList(),
-                _buildHighlightList(),
-              ],
+      body: Column(
+        children: [
+          // 드롭다운 필터 바
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: Colors.grey.shade50,
+              border: Border(bottom: BorderSide(color: Colors.grey.shade200)),
             ),
+            child: SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  // 정렬 옵션
+                  _buildDropdown(
+                    value: _sortOrder,
+                    items: const ['최신순', '오래된순', '성경 순서별'],
+                    onChanged: (val) {
+                      setState(() => _sortOrder = val!);
+                      loadData();
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  // 권 별 필터
+                  _buildDropdown(
+                    value: _selectedBook,
+                    items: _availableBooks,
+                    onChanged: (val) {
+                      setState(() => _selectedBook = val!);
+                      loadData();
+                    },
+                  ),
+                  const SizedBox(width: 8),
+                  // 질문 상태 필터 (질문 탭에서만 보임)
+                  if (isQuestionTab)
+                    _buildDropdown(
+                      value: _questionStatus,
+                      items: const ['전체 보기', '미해결', '해결 완료'],
+                      onChanged: (val) {
+                        setState(() => _questionStatus = val!);
+                        loadData();
+                      },
+                    ),
+                ],
+              ),
+            ),
+          ),
+          
+          Expanded(
+            child: _isLoading
+                ? const Center(child: CircularProgressIndicator())
+                : TabBarView(
+                    controller: _tabController,
+                    children: [
+                      _buildMemoList(),
+                      _buildQuestionList(),
+                      _buildHighlightList(),
+                    ],
+                  ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDropdown({required String value, required List<String> items, required ValueChanged<String?> onChanged}) {
+    return Container(
+      height: 36,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.grey.shade300),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: items.contains(value) ? value : items.first,
+          icon: const Icon(Icons.arrow_drop_down, size: 20),
+          style: const TextStyle(fontSize: 13, color: Colors.black87),
+          onChanged: onChanged,
+          items: items.map((e) => DropdownMenuItem(value: e, child: Text(e))).toList(),
+        ),
+      ),
     );
   }
 
@@ -159,7 +305,7 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    '${memo.bookName} ${memo.chapter}장 ${memo.verse}절',
+                    '${BibleRepository.getFullName(memo.bookName) ?? memo.bookName} ${memo.chapter}장 ${memo.verse}절',
                     style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary),
                   ),
                   const SizedBox(height: 8),
@@ -179,7 +325,7 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
   }
 
   Widget _buildQuestionList() {
-    if (_questions.isEmpty) return const Center(child: Text('등록된 질문이 없습니다.'));
+    if (_questions.isEmpty) return const Center(child: Text('해당되는 질문이 없습니다.'));
     return ListView.separated(
       padding: const EdgeInsets.all(16),
       itemCount: _questions.length,
@@ -194,7 +340,7 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
               backgroundColor: Colors.transparent,
               builder: (context) => QuestionDetailSheet(
                 question: q,
-                onUpdate: _loadData,
+                onUpdate: loadData,
               ),
             );
           },
@@ -243,7 +389,7 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
   }
 
   Widget _buildHighlightList() {
-    if (_highlights.isEmpty) return const Center(child: Text('형광펜 기록이 없습니다.'));
+    if (_highlights.isEmpty) return const Center(child: Text('저장된 형광펜 기록이 없습니다.'));
     return ListView.separated(
       padding: const EdgeInsets.all(16),
       itemCount: _highlights.length,
@@ -264,7 +410,7 @@ class _LibraryScreenState extends State<LibraryScreen> with SingleTickerProvider
                       CircleAvatar(backgroundColor: Color(hl.colorCode), radius: 8),
                       const SizedBox(width: 8),
                       Text(
-                        '${hl.bookName} ${hl.chapter}장 ${hl.verse}절',
+                        '${BibleRepository.getFullName(hl.bookName) ?? hl.bookName} ${hl.chapter}장 ${hl.verse}절',
                         style: const TextStyle(fontWeight: FontWeight.bold),
                       ),
                     ],

@@ -109,30 +109,35 @@ class _VerseWidgetState extends State<VerseWidget> {
             ),
             const SizedBox(width: 8),
             Expanded(
-              // 드래그 하이라이트를 위한 SelectableText
-              child: SelectableText.rich(
-                TextSpan(
-                  style: Theme.of(context).textTheme.bodyLarge,
-                  children: HighlightParser.buildVerseSpans(widget.verse.text, highlights),
-                ),
-                contextMenuBuilder: (context, editableTextState) {
-                  final List<ContextMenuButtonItem> buttonItems = editableTextState.contextMenuButtonItems;
+              child: SelectionArea(
+                contextMenuBuilder: (context, selectableRegionState) {
+                  final List<ContextMenuButtonItem> buttonItems = selectableRegionState.contextMenuButtonItems;
                   buttonItems.insert(
                     0,
                     ContextMenuButtonItem(
                       label: '형광펜',
                       onPressed: () {
-                        final TextSelection selection = editableTextState.textEditingValue.selection;
+                        final TextSelection selection = selectableRegionState.textEditingValue.selection;
                         _addHighlight(selection.start, selection.end);
                         ContextMenuController.removeAny();
                       },
                     ),
                   );
                   return AdaptiveTextSelectionToolbar.buttonItems(
-                    anchors: editableTextState.contextMenuAnchors,
+                    anchors: selectableRegionState.contextMenuAnchors,
                     buttonItems: buttonItems,
                   );
                 },
+                child: GestureDetector(
+                  onTap: _showActionMenu,
+                  behavior: HitTestBehavior.opaque,
+                  child: Text.rich(
+                    TextSpan(
+                      style: Theme.of(context).textTheme.bodyLarge,
+                      children: HighlightParser.buildVerseSpans(widget.verse.text, highlights),
+                    ),
+                  ),
+                ),
               ),
             ),
           ],

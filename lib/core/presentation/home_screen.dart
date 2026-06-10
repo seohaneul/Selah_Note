@@ -12,6 +12,7 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   int _currentIndex = 0;
   final GlobalKey<BibleScreenState> _bibleScreenKey = GlobalKey<BibleScreenState>();
+  final GlobalKey<LibraryScreenState> _libraryScreenKey = GlobalKey<LibraryScreenState>();
 
   void _onNavigateToBible(String bookName, int chapter, int verse) {
     setState(() {
@@ -30,7 +31,7 @@ class _HomeScreenState extends State<HomeScreen> {
         index: _currentIndex,
         children: [
           BibleScreen(key: _bibleScreenKey),
-          LibraryScreen(onNavigateToBible: _onNavigateToBible),
+          LibraryScreen(key: _libraryScreenKey, onNavigateToBible: _onNavigateToBible),
         ],
       ),
       bottomNavigationBar: BottomNavigationBar(
@@ -39,6 +40,9 @@ class _HomeScreenState extends State<HomeScreen> {
           setState(() {
             _currentIndex = index;
           });
+          if (index == 1) {
+            _libraryScreenKey.currentState?.loadData();
+          }
         },
         items: const [
           BottomNavigationBarItem(
