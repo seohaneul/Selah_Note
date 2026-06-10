@@ -19,7 +19,8 @@ class BibleScreenState extends State<BibleScreen> {
 
   void jumpToBibleVerse(String bookName, int chapter, int verse) {
     final targetIndex = BibleRepository.allChapters.indexWhere(
-      (entry) => entry.key == bookName && entry.value == chapter
+      (entry) => (entry.key == bookName || BibleRepository.getFullName(entry.key) == bookName) 
+                 && entry.value == chapter
     );
     if (targetIndex != -1) {
       setState(() {
