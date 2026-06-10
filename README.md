@@ -1,17 +1,53 @@
-# selah_note
+# 말씀조각 (Selah Note)
 
-A new Flutter project.
+<blockquote>바쁜 현대인들이 일상 속에서 잠시 멈추어(Selah) 말씀과 마주하고, 자신만의 소중한 신앙 기록을 밀도 있게 쌓아갈 수 있도록 돕는 Flutter 기반 묵상 아카이빙 애플리케이션</blockquote>
 
-## Getting Started
+---
 
-This project is a starting point for a Flutter application.
+### 🛠️ 주요 기능 (Key Features)
 
-A few resources to get you started if this is your first Flutter project:
+- <b>성경 뷰어 및 고속 탐색 엔진</b>
+  - JSON 포맷의 대용량 성경 데이터를 효율적으로 파싱하여 끊김 없는 스크롤 렌더링 제공
+  - 상단 탐색 바 터치 시 호출되는 바텀 시트를 통해 원하는 장/절로 즉각적인 스크롤 이동 가능
 
-- [Learn Flutter](https://docs.flutter.dev/get-started/learn-flutter)
-- [Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Flutter learning resources](https://docs.flutter.dev/reference/learning-resources)
+- <b>정밀 구절 하이라이트 및 제스처 최적화</b>
+  - 모바일 고유의 본문 롱프레스 복사 기능(SelectableText)과 구절 단 터치 액션 간의 제스처 충돌 완벽 분리
+  - 5가지 감성적인 파스텔 톤 컬러 팔레트를 활용한 글자 단위 다중 형광펜 기능 및 로컬 DB 실시간 저장 구현
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+- <b>구조화된 아카이빙 (보관함)</b>
+  - 성경 구절 인덱스와 사용자의 메모, 질문 데이터를 유기적으로 매핑하여 로컬 DB 연동 저장
+  - 보관함 리스트에서 기록 터치 시 해당 성경 본문 위치로 즉시 스크롤되는 점프(Jump) 기능 구현
+  - 카테고리별 필터링 기능 및 화면 전환을 최소화한 인앱 수정/삭제 바텀 시트 지원
+
+- <b>오늘의 묵상 (1일 1질문 시스템)</b>
+  - 기존의 복잡한 묵상 템플릿을 고도화하여 100가지 상황별 질문 라이브러리 중 매일 하나씩 깊이 있는 질문을 배달하는 직관적인 UI/UX 시스템 구현 완료
+
+---
+
+### 💻 기술 스택 (Tech Stack)
+
+- <b>Framework:</b> Flutter (Dart)
+- <b>Database:</b> Isar DB (Local NoSQL)
+- <b>Architecture:</b> 3-Tab Navigation System
+- <b>State Management:</b> UI State Optimization & Event Control
+
+---
+
+### 📦 데이터베이스 스키마 구조 (Database Architecture)
+
+오프라인 환경에서도 안전하고 빠른 데이터 처리를 위해 Isar DB를 채택하여 다음과 같은 스키마 구조로 설계 및 구현 완료
+
+- <b>HighlightModel:</b> 형광펜 지정 영역의 시작/끝 문자열 인덱스 및 컬러 코드 저장
+- <b>MemoModel:</b> 성경 구절 고유 주소(장/절)와 매핑된 유저 커스텀 메모 저장
+- <b>QuestionModel:</b> 구절 기반의 신앙적 질문 및 답변 데이터 적재
+
+---
+
+### 🚧 한계점 및 향후 과제 (Limitations & Roadmap)
+
+- <b>성경 번역본 저작권 이슈 (치명적 한계점)</b>
+  - 현재 오프라인 로컬 DB에 성경 데이터를 내장하는 방식으로 개발되어 상용 배포 시 대한성서공회의 공식 저작권 규정 검토 및 라이선스 취득이 필수적으로 요구됨. 실제 서비스 전환 시 가장 먼저 해결해야 할 최우선 과제에 해당함
+- <b>클라우드 동기화 시스템 도입</b>
+  - 기기 변경이나 앱 삭제 시 정성스레 쌓아온 로컬 데이터 유실을 방지하기 위해 서버 연동 기반의 실시간 클라우드 자동 백업 및 복구 시스템 구축 예정
+- <b>AI 맞춤형 말씀 추천 알고리즘</b>
+  - 유저가 누적 작성한 '오늘 하루의 질문' 데이터를 분석하여 개인의 현재 감정 상태와 일상 상황에 가장 알맞은 말씀 조각을 자동 추천해주는 개인화 기능 고도화 준비 중
