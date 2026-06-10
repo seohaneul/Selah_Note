@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
+import 'package:isar/isar.dart';
 import '../../data/bible_model.dart';
 import '../../data/highlight_model.dart';
 import '../../../../core/utils/highlight_parser.dart';
+import '../../../../core/database/local_db.dart';
 import '../../../memo/presentation/widgets/memo_bottom_sheet.dart';
+import '../../../memo/data/memo_model.dart';
 
 class VerseWidget extends StatefulWidget {
   final Verse verse;
-  final int bookId;
-  final int chapter;
 
-  const VerseWidget({Key? key, required this.verse, required this.bookId, required this.chapter}) : super(key: key);
+  const VerseWidget({Key? key, required this.verse}) : super(key: key);
 
   @override
   State<VerseWidget> createState() => _VerseWidgetState();
@@ -22,27 +23,56 @@ class _VerseWidgetState extends State<VerseWidget> {
   @override
   void initState() {
     super.initState();
-    // 초기 로딩용 샘플 하이라이트 추가
-    if (widget.verse.verse == 1) {
-      highlights.add(HighlightModel(
-        bookId: widget.bookId,
-        chapter: widget.chapter,
-        verse: widget.verse.verse,
-        startIndex: 4, 
-        endIndex: 8, 
-        colorCode: const Color(0x66D9A05B).value,
-      ));
-      hasMemo = true;
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    final hl = await LocalDb.isar.highlightModels.filter()
+      .bookNameEqualTo(widget.verse.bookName)
+      .chapterEqualTo(widget.verse.chapter)
+      .verseEqualTo(widget.verse.verse)
+      .findAll();
+      
+    final memoCount = await LocalDb.isar.memos.filter()
+      .bookNameEqualTo(widget.verse.bookName)
+      .chapterEqualTo(widget.verse.chapter)
+      .verseEqualTo(widget.verse.verse)
+      .count();
+
+    if (mounted) {
+      setState(() {
+        highlights = hl;
+        hasMemo = memoCount > 0;
+      });
     }
   }
 
-  void _showMemoOptions() {
-    showModalBottomSheet(
+  Future<void> _addHighlight(int start, int end) async {
+    final highlight = HighlightModel(
+      bookName: widget.verse.bookName,
+      chapter: widget.verse.chapter,
+      verse: widget.verse.verse,
+      startIndex: start,
+      endIndex: end,
+      colorCode: const Color(0x66D9A05B).value, // 주황색 하이라이트
+    );
+    
+    await LocalDb.isar.writeTxn(() async {
+      await LocalDb.isar.highlightModels.put(highlight);
+    });
+    
+    _loadData();
+  }
+
+  void _showMemoOptions() async {
+    await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => MemoBottomSheet(verse: widget.verse),
     );
+    // 바텀시트가 닫힌 후 데이터 다시 로드 (메모 작성 여부 업데이트)
+    _loadData();
   }
 
   @override
@@ -50,7 +80,7 @@ class _VerseWidgetState extends State<VerseWidget> {
     return GestureDetector(
       onTap: _showMemoOptions,
       child: Container(
-        color: Colors.transparent, // 터치 영역 확보용
+        color: Colors.transparent,
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -76,11 +106,30 @@ class _VerseWidgetState extends State<VerseWidget> {
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: RichText(
-                text: TextSpan(
+              // 드래그 하이라이트를 위한 SelectableText
+              child: SelectableText.rich(
+                TextSpan(
                   style: Theme.of(context).textTheme.bodyLarge,
                   children: HighlightParser.buildVerseSpans(widget.verse.text, highlights),
                 ),
+                contextMenuBuilder: (context, editableTextState) {
+                  final List<ContextMenuButtonItem> buttonItems = editableTextState.contextMenuButtonItems;
+                  buttonItems.insert(
+                    0,
+                    ContextMenuButtonItem(
+                      label: '형광펜',
+                      onPressed: () {
+                        final TextSelection selection = editableTextState.textEditingValue.selection;
+                        _addHighlight(selection.start, selection.end);
+                        ContextMenuController.removeAny();
+                      },
+                    ),
+                  );
+                  return AdaptiveTextSelectionToolbar.buttonItems(
+                    anchors: editableTextState.contextMenuAnchors,
+                    buttonItems: buttonItems,
+                  );
+                },
               ),
             ),
           ],

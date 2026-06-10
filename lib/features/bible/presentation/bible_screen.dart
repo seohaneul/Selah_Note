@@ -1,6 +1,5 @@
-import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import '../data/bible_repository.dart';
 import '../data/bible_model.dart';
 import 'widgets/verse_widget.dart';
 
@@ -12,40 +11,39 @@ class BibleScreen extends StatefulWidget {
 }
 
 class _BibleScreenState extends State<BibleScreen> {
-  BibleBook? bibleBook;
+  List<Verse> verses = [];
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    _loadBibleData();
+    _loadData();
   }
 
-  Future<void> _loadBibleData() async {
-    // 실제 에셋 파일에서 읽어옵니다.
-    final String response = await rootBundle.loadString('assets/bible_genesis_1.json');
-    final data = await json.decode(response);
+  Future<void> _loadData() async {
+    await BibleRepository.loadBible();
     setState(() {
-      bibleBook = BibleBook.fromJson(data);
+      verses = BibleRepository.getChapterVerses("창", 1);
+      isLoading = false;
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    if (bibleBook == null) {
+    if (isLoading) {
       return const Scaffold(body: Center(child: CircularProgressIndicator()));
     }
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('${bibleBook!.bookName} ${bibleBook!.chapter}장'),
+        title: const Text('창세기 1장'),
       ),
       body: ListView.separated(
         padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
-        itemCount: bibleBook!.verses.length,
+        itemCount: verses.length,
         separatorBuilder: (context, index) => const SizedBox(height: 20),
         itemBuilder: (context, index) {
-          final verse = bibleBook!.verses[index];
-          return VerseWidget(verse: verse, bookId: bibleBook!.bookId, chapter: bibleBook!.chapter);
+          return VerseWidget(verse: verses[index]);
         },
       ),
     );

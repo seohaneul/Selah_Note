@@ -17,10 +17,10 @@ const MemoSchema = CollectionSchema(
   name: r'Memo',
   id: -884281460052022898,
   properties: {
-    r'bookId': PropertySchema(
+    r'bookName': PropertySchema(
       id: 0,
-      name: r'bookId',
-      type: IsarType.long,
+      name: r'bookName',
+      type: IsarType.string,
     ),
     r'chapter': PropertySchema(
       id: 1,
@@ -53,7 +53,47 @@ const MemoSchema = CollectionSchema(
   deserialize: _memoDeserialize,
   deserializeProp: _memoDeserializeProp,
   idName: r'id',
-  indexes: {},
+  indexes: {
+    r'bookName': IndexSchema(
+      id: -1933582217000277918,
+      name: r'bookName',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'bookName',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
+    ),
+    r'chapter': IndexSchema(
+      id: 3334647619021962063,
+      name: r'chapter',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'chapter',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    ),
+    r'verse': IndexSchema(
+      id: -7884883553101231627,
+      name: r'verse',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'verse',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    )
+  },
   links: {},
   embeddedSchemas: {},
   getId: _memoGetId,
@@ -68,6 +108,7 @@ int _memoEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  bytesCount += 3 + object.bookName.length * 3;
   bytesCount += 3 + object.content.length * 3;
   bytesCount += 3 + object.status.length * 3;
   return bytesCount;
@@ -79,7 +120,7 @@ void _memoSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeLong(offsets[0], object.bookId);
+  writer.writeString(offsets[0], object.bookName);
   writer.writeLong(offsets[1], object.chapter);
   writer.writeString(offsets[2], object.content);
   writer.writeDateTime(offsets[3], object.createdAt);
@@ -94,7 +135,7 @@ Memo _memoDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = Memo(
-    bookId: reader.readLong(offsets[0]),
+    bookName: reader.readString(offsets[0]),
     chapter: reader.readLong(offsets[1]),
     content: reader.readString(offsets[2]),
     createdAt: reader.readDateTime(offsets[3]),
@@ -113,7 +154,7 @@ P _memoDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readLong(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 1:
       return (reader.readLong(offset)) as P;
     case 2:
@@ -145,6 +186,22 @@ extension MemoQueryWhereSort on QueryBuilder<Memo, Memo, QWhere> {
   QueryBuilder<Memo, Memo, QAfterWhere> anyId() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+
+  QueryBuilder<Memo, Memo, QAfterWhere> anyChapter() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'chapter'),
+      );
+    });
+  }
+
+  QueryBuilder<Memo, Memo, QAfterWhere> anyVerse() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'verse'),
+      );
     });
   }
 }
@@ -214,57 +271,354 @@ extension MemoQueryWhere on QueryBuilder<Memo, Memo, QWhereClause> {
       ));
     });
   }
-}
 
-extension MemoQueryFilter on QueryBuilder<Memo, Memo, QFilterCondition> {
-  QueryBuilder<Memo, Memo, QAfterFilterCondition> bookIdEqualTo(int value) {
+  QueryBuilder<Memo, Memo, QAfterWhereClause> bookNameEqualTo(String bookName) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'bookId',
-        value: value,
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'bookName',
+        value: [bookName],
       ));
     });
   }
 
-  QueryBuilder<Memo, Memo, QAfterFilterCondition> bookIdGreaterThan(
-    int value, {
+  QueryBuilder<Memo, Memo, QAfterWhereClause> bookNameNotEqualTo(
+      String bookName) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'bookName',
+              lower: [],
+              upper: [bookName],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'bookName',
+              lower: [bookName],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'bookName',
+              lower: [bookName],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'bookName',
+              lower: [],
+              upper: [bookName],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<Memo, Memo, QAfterWhereClause> chapterEqualTo(int chapter) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'chapter',
+        value: [chapter],
+      ));
+    });
+  }
+
+  QueryBuilder<Memo, Memo, QAfterWhereClause> chapterNotEqualTo(int chapter) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'chapter',
+              lower: [],
+              upper: [chapter],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'chapter',
+              lower: [chapter],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'chapter',
+              lower: [chapter],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'chapter',
+              lower: [],
+              upper: [chapter],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<Memo, Memo, QAfterWhereClause> chapterGreaterThan(
+    int chapter, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        include: include,
-        property: r'bookId',
-        value: value,
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'chapter',
+        lower: [chapter],
+        includeLower: include,
+        upper: [],
       ));
     });
   }
 
-  QueryBuilder<Memo, Memo, QAfterFilterCondition> bookIdLessThan(
-    int value, {
+  QueryBuilder<Memo, Memo, QAfterWhereClause> chapterLessThan(
+    int chapter, {
     bool include = false,
   }) {
     return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.lessThan(
-        include: include,
-        property: r'bookId',
-        value: value,
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'chapter',
+        lower: [],
+        upper: [chapter],
+        includeUpper: include,
       ));
     });
   }
 
-  QueryBuilder<Memo, Memo, QAfterFilterCondition> bookIdBetween(
-    int lower,
-    int upper, {
+  QueryBuilder<Memo, Memo, QAfterWhereClause> chapterBetween(
+    int lowerChapter,
+    int upperChapter, {
     bool includeLower = true,
     bool includeUpper = true,
   }) {
     return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'chapter',
+        lower: [lowerChapter],
+        includeLower: includeLower,
+        upper: [upperChapter],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<Memo, Memo, QAfterWhereClause> verseEqualTo(int verse) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'verse',
+        value: [verse],
+      ));
+    });
+  }
+
+  QueryBuilder<Memo, Memo, QAfterWhereClause> verseNotEqualTo(int verse) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'verse',
+              lower: [],
+              upper: [verse],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'verse',
+              lower: [verse],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'verse',
+              lower: [verse],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'verse',
+              lower: [],
+              upper: [verse],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<Memo, Memo, QAfterWhereClause> verseGreaterThan(
+    int verse, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'verse',
+        lower: [verse],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<Memo, Memo, QAfterWhereClause> verseLessThan(
+    int verse, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'verse',
+        lower: [],
+        upper: [verse],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<Memo, Memo, QAfterWhereClause> verseBetween(
+    int lowerVerse,
+    int upperVerse, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'verse',
+        lower: [lowerVerse],
+        includeLower: includeLower,
+        upper: [upperVerse],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+}
+
+extension MemoQueryFilter on QueryBuilder<Memo, Memo, QFilterCondition> {
+  QueryBuilder<Memo, Memo, QAfterFilterCondition> bookNameEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'bookName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Memo, Memo, QAfterFilterCondition> bookNameGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'bookName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Memo, Memo, QAfterFilterCondition> bookNameLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'bookName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Memo, Memo, QAfterFilterCondition> bookNameBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'bookId',
+        property: r'bookName',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Memo, Memo, QAfterFilterCondition> bookNameStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'bookName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Memo, Memo, QAfterFilterCondition> bookNameEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'bookName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Memo, Memo, QAfterFilterCondition> bookNameContains(String value,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'bookName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Memo, Memo, QAfterFilterCondition> bookNameMatches(
+      String pattern,
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'bookName',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<Memo, Memo, QAfterFilterCondition> bookNameIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'bookName',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<Memo, Memo, QAfterFilterCondition> bookNameIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'bookName',
+        value: '',
       ));
     });
   }
@@ -740,15 +1094,15 @@ extension MemoQueryObject on QueryBuilder<Memo, Memo, QFilterCondition> {}
 extension MemoQueryLinks on QueryBuilder<Memo, Memo, QFilterCondition> {}
 
 extension MemoQuerySortBy on QueryBuilder<Memo, Memo, QSortBy> {
-  QueryBuilder<Memo, Memo, QAfterSortBy> sortByBookId() {
+  QueryBuilder<Memo, Memo, QAfterSortBy> sortByBookName() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'bookId', Sort.asc);
+      return query.addSortBy(r'bookName', Sort.asc);
     });
   }
 
-  QueryBuilder<Memo, Memo, QAfterSortBy> sortByBookIdDesc() {
+  QueryBuilder<Memo, Memo, QAfterSortBy> sortByBookNameDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'bookId', Sort.desc);
+      return query.addSortBy(r'bookName', Sort.desc);
     });
   }
 
@@ -814,15 +1168,15 @@ extension MemoQuerySortBy on QueryBuilder<Memo, Memo, QSortBy> {
 }
 
 extension MemoQuerySortThenBy on QueryBuilder<Memo, Memo, QSortThenBy> {
-  QueryBuilder<Memo, Memo, QAfterSortBy> thenByBookId() {
+  QueryBuilder<Memo, Memo, QAfterSortBy> thenByBookName() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'bookId', Sort.asc);
+      return query.addSortBy(r'bookName', Sort.asc);
     });
   }
 
-  QueryBuilder<Memo, Memo, QAfterSortBy> thenByBookIdDesc() {
+  QueryBuilder<Memo, Memo, QAfterSortBy> thenByBookNameDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'bookId', Sort.desc);
+      return query.addSortBy(r'bookName', Sort.desc);
     });
   }
 
@@ -900,9 +1254,10 @@ extension MemoQuerySortThenBy on QueryBuilder<Memo, Memo, QSortThenBy> {
 }
 
 extension MemoQueryWhereDistinct on QueryBuilder<Memo, Memo, QDistinct> {
-  QueryBuilder<Memo, Memo, QDistinct> distinctByBookId() {
+  QueryBuilder<Memo, Memo, QDistinct> distinctByBookName(
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'bookId');
+      return query.addDistinctBy(r'bookName', caseSensitive: caseSensitive);
     });
   }
 
@@ -946,9 +1301,9 @@ extension MemoQueryProperty on QueryBuilder<Memo, Memo, QQueryProperty> {
     });
   }
 
-  QueryBuilder<Memo, int, QQueryOperations> bookIdProperty() {
+  QueryBuilder<Memo, String, QQueryOperations> bookNameProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'bookId');
+      return query.addPropertyName(r'bookName');
     });
   }
 

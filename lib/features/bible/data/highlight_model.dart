@@ -6,15 +6,18 @@ part 'highlight_model.g.dart';
 class HighlightModel {
   Id id = Isar.autoIncrement;
 
-  final int bookId;
+  @Index()
+  final String bookName;
+  @Index()
   final int chapter;
+  @Index()
   final int verse;
   final int startIndex;
   final int endIndex;
-  final int colorCode; // Color value
+  final int colorCode; 
 
   HighlightModel({
-    required this.bookId,
+    required this.bookName,
     required this.chapter,
     required this.verse,
     required this.startIndex,

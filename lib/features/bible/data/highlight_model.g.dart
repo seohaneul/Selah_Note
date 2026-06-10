@@ -17,10 +17,10 @@ const HighlightModelSchema = CollectionSchema(
   name: r'HighlightModel',
   id: 8278649049609836408,
   properties: {
-    r'bookId': PropertySchema(
+    r'bookName': PropertySchema(
       id: 0,
-      name: r'bookId',
-      type: IsarType.long,
+      name: r'bookName',
+      type: IsarType.string,
     ),
     r'chapter': PropertySchema(
       id: 1,
@@ -53,7 +53,47 @@ const HighlightModelSchema = CollectionSchema(
   deserialize: _highlightModelDeserialize,
   deserializeProp: _highlightModelDeserializeProp,
   idName: r'id',
-  indexes: {},
+  indexes: {
+    r'bookName': IndexSchema(
+      id: -1933582217000277918,
+      name: r'bookName',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'bookName',
+          type: IndexType.hash,
+          caseSensitive: true,
+        )
+      ],
+    ),
+    r'chapter': IndexSchema(
+      id: 3334647619021962063,
+      name: r'chapter',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'chapter',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    ),
+    r'verse': IndexSchema(
+      id: -7884883553101231627,
+      name: r'verse',
+      unique: false,
+      replace: false,
+      properties: [
+        IndexPropertySchema(
+          name: r'verse',
+          type: IndexType.value,
+          caseSensitive: false,
+        )
+      ],
+    )
+  },
   links: {},
   embeddedSchemas: {},
   getId: _highlightModelGetId,
@@ -68,6 +108,7 @@ int _highlightModelEstimateSize(
   Map<Type, List<int>> allOffsets,
 ) {
   var bytesCount = offsets.last;
+  bytesCount += 3 + object.bookName.length * 3;
   return bytesCount;
 }
 
@@ -77,7 +118,7 @@ void _highlightModelSerialize(
   List<int> offsets,
   Map<Type, List<int>> allOffsets,
 ) {
-  writer.writeLong(offsets[0], object.bookId);
+  writer.writeString(offsets[0], object.bookName);
   writer.writeLong(offsets[1], object.chapter);
   writer.writeLong(offsets[2], object.colorCode);
   writer.writeLong(offsets[3], object.endIndex);
@@ -92,7 +133,7 @@ HighlightModel _highlightModelDeserialize(
   Map<Type, List<int>> allOffsets,
 ) {
   final object = HighlightModel(
-    bookId: reader.readLong(offsets[0]),
+    bookName: reader.readString(offsets[0]),
     chapter: reader.readLong(offsets[1]),
     colorCode: reader.readLong(offsets[2]),
     endIndex: reader.readLong(offsets[3]),
@@ -111,7 +152,7 @@ P _highlightModelDeserializeProp<P>(
 ) {
   switch (propertyId) {
     case 0:
-      return (reader.readLong(offset)) as P;
+      return (reader.readString(offset)) as P;
     case 1:
       return (reader.readLong(offset)) as P;
     case 2:
@@ -145,6 +186,22 @@ extension HighlightModelQueryWhereSort
   QueryBuilder<HighlightModel, HighlightModel, QAfterWhere> anyId() {
     return QueryBuilder.apply(this, (query) {
       return query.addWhereClause(const IdWhereClause.any());
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterWhere> anyChapter() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'chapter'),
+      );
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterWhere> anyVerse() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(
+        const IndexWhereClause.any(indexName: r'verse'),
+      );
     });
   }
 }
@@ -219,62 +276,371 @@ extension HighlightModelQueryWhere
       ));
     });
   }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterWhereClause>
+      bookNameEqualTo(String bookName) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'bookName',
+        value: [bookName],
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterWhereClause>
+      bookNameNotEqualTo(String bookName) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'bookName',
+              lower: [],
+              upper: [bookName],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'bookName',
+              lower: [bookName],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'bookName',
+              lower: [bookName],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'bookName',
+              lower: [],
+              upper: [bookName],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterWhereClause>
+      chapterEqualTo(int chapter) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'chapter',
+        value: [chapter],
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterWhereClause>
+      chapterNotEqualTo(int chapter) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'chapter',
+              lower: [],
+              upper: [chapter],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'chapter',
+              lower: [chapter],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'chapter',
+              lower: [chapter],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'chapter',
+              lower: [],
+              upper: [chapter],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterWhereClause>
+      chapterGreaterThan(
+    int chapter, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'chapter',
+        lower: [chapter],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterWhereClause>
+      chapterLessThan(
+    int chapter, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'chapter',
+        lower: [],
+        upper: [chapter],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterWhereClause>
+      chapterBetween(
+    int lowerChapter,
+    int upperChapter, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'chapter',
+        lower: [lowerChapter],
+        includeLower: includeLower,
+        upper: [upperChapter],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterWhereClause> verseEqualTo(
+      int verse) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.equalTo(
+        indexName: r'verse',
+        value: [verse],
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterWhereClause>
+      verseNotEqualTo(int verse) {
+    return QueryBuilder.apply(this, (query) {
+      if (query.whereSort == Sort.asc) {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'verse',
+              lower: [],
+              upper: [verse],
+              includeUpper: false,
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'verse',
+              lower: [verse],
+              includeLower: false,
+              upper: [],
+            ));
+      } else {
+        return query
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'verse',
+              lower: [verse],
+              includeLower: false,
+              upper: [],
+            ))
+            .addWhereClause(IndexWhereClause.between(
+              indexName: r'verse',
+              lower: [],
+              upper: [verse],
+              includeUpper: false,
+            ));
+      }
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterWhereClause>
+      verseGreaterThan(
+    int verse, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'verse',
+        lower: [verse],
+        includeLower: include,
+        upper: [],
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterWhereClause> verseLessThan(
+    int verse, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'verse',
+        lower: [],
+        upper: [verse],
+        includeUpper: include,
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterWhereClause> verseBetween(
+    int lowerVerse,
+    int upperVerse, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addWhereClause(IndexWhereClause.between(
+        indexName: r'verse',
+        lower: [lowerVerse],
+        includeLower: includeLower,
+        upper: [upperVerse],
+        includeUpper: includeUpper,
+      ));
+    });
+  }
 }
 
 extension HighlightModelQueryFilter
     on QueryBuilder<HighlightModel, HighlightModel, QFilterCondition> {
   QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
-      bookIdEqualTo(int value) {
+      bookNameEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'bookId',
+        property: r'bookName',
         value: value,
+        caseSensitive: caseSensitive,
       ));
     });
   }
 
   QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
-      bookIdGreaterThan(
-    int value, {
+      bookNameGreaterThan(
+    String value, {
     bool include = false,
+    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'bookId',
+        property: r'bookName',
         value: value,
+        caseSensitive: caseSensitive,
       ));
     });
   }
 
   QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
-      bookIdLessThan(
-    int value, {
+      bookNameLessThan(
+    String value, {
     bool include = false,
+    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'bookId',
+        property: r'bookName',
         value: value,
+        caseSensitive: caseSensitive,
       ));
     });
   }
 
   QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
-      bookIdBetween(
-    int lower,
-    int upper, {
+      bookNameBetween(
+    String lower,
+    String upper, {
     bool includeLower = true,
     bool includeUpper = true,
+    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'bookId',
+        property: r'bookName',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
+      bookNameStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'bookName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
+      bookNameEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'bookName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
+      bookNameContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'bookName',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
+      bookNameMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'bookName',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
+      bookNameIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'bookName',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
+      bookNameIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'bookName',
+        value: '',
       ));
     });
   }
@@ -623,16 +989,16 @@ extension HighlightModelQueryLinks
 
 extension HighlightModelQuerySortBy
     on QueryBuilder<HighlightModel, HighlightModel, QSortBy> {
-  QueryBuilder<HighlightModel, HighlightModel, QAfterSortBy> sortByBookId() {
+  QueryBuilder<HighlightModel, HighlightModel, QAfterSortBy> sortByBookName() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'bookId', Sort.asc);
+      return query.addSortBy(r'bookName', Sort.asc);
     });
   }
 
   QueryBuilder<HighlightModel, HighlightModel, QAfterSortBy>
-      sortByBookIdDesc() {
+      sortByBookNameDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'bookId', Sort.desc);
+      return query.addSortBy(r'bookName', Sort.desc);
     });
   }
 
@@ -704,16 +1070,16 @@ extension HighlightModelQuerySortBy
 
 extension HighlightModelQuerySortThenBy
     on QueryBuilder<HighlightModel, HighlightModel, QSortThenBy> {
-  QueryBuilder<HighlightModel, HighlightModel, QAfterSortBy> thenByBookId() {
+  QueryBuilder<HighlightModel, HighlightModel, QAfterSortBy> thenByBookName() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'bookId', Sort.asc);
+      return query.addSortBy(r'bookName', Sort.asc);
     });
   }
 
   QueryBuilder<HighlightModel, HighlightModel, QAfterSortBy>
-      thenByBookIdDesc() {
+      thenByBookNameDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'bookId', Sort.desc);
+      return query.addSortBy(r'bookName', Sort.desc);
     });
   }
 
@@ -797,9 +1163,10 @@ extension HighlightModelQuerySortThenBy
 
 extension HighlightModelQueryWhereDistinct
     on QueryBuilder<HighlightModel, HighlightModel, QDistinct> {
-  QueryBuilder<HighlightModel, HighlightModel, QDistinct> distinctByBookId() {
+  QueryBuilder<HighlightModel, HighlightModel, QDistinct> distinctByBookName(
+      {bool caseSensitive = true}) {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'bookId');
+      return query.addDistinctBy(r'bookName', caseSensitive: caseSensitive);
     });
   }
 
@@ -844,9 +1211,9 @@ extension HighlightModelQueryProperty
     });
   }
 
-  QueryBuilder<HighlightModel, int, QQueryOperations> bookIdProperty() {
+  QueryBuilder<HighlightModel, String, QQueryOperations> bookNameProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'bookId');
+      return query.addPropertyName(r'bookName');
     });
   }
 
