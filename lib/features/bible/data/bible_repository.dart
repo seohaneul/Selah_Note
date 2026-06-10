@@ -4,6 +4,10 @@ import 'bible_model.dart';
 
 class BibleRepository {
   static final Map<String, String> _bibleData = {};
+  
+  static final List<String> books = [];
+  static final Map<String, int> bookMaxChapters = {};
+  static final List<MapEntry<String, int>> allChapters = [];
 
   static Future<void> loadBible() async {
     if (_bibleData.isNotEmpty) return;
@@ -11,10 +15,34 @@ class BibleRepository {
       final String response = await rootBundle.loadString('assets/bible.json');
       final Map<String, dynamic> data = json.decode(response);
       
+      final regex = RegExp(r'^([^\d]+)(\d+):');
+      
       data.forEach((key, value) {
         _bibleData[key] = value.toString();
+        
+        final match = regex.firstMatch(key);
+        if (match != null) {
+          String bookName = match.group(1)!;
+          int chapter = int.parse(match.group(2)!);
+          
+          if (!books.contains(bookName)) {
+            books.add(bookName);
+          }
+          
+          if ((bookMaxChapters[bookName] ?? 0) < chapter) {
+            bookMaxChapters[bookName] = chapter;
+          }
+        }
       });
-      print("Bible loaded: ${_bibleData.length} verses.");
+      
+      for (String book in books) {
+        int maxCh = bookMaxChapters[book] ?? 1;
+        for (int i = 1; i <= maxCh; i++) {
+          allChapters.add(MapEntry(book, i));
+        }
+      }
+      
+      print("Bible loaded: ${_bibleData.length} verses, ${allChapters.length} chapters.");
     } catch (e) {
       print("Failed to load bible.json: $e");
     }
