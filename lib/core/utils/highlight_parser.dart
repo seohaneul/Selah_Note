@@ -1,8 +1,14 @@
 import 'package:flutter/material.dart';
 import '../../features/bible/data/highlight_model.dart';
 
+import 'package:flutter/gestures.dart';
+
 class HighlightParser {
-  static List<TextSpan> buildVerseSpans(String fullText, List<HighlightModel> highlights) {
+  static List<TextSpan> buildVerseSpans(
+    String fullText, 
+    List<HighlightModel> highlights,
+    {Function(HighlightModel)? onHighlightTap}
+  ) {
     List<TextSpan> spans = [];
     int currentIndex = 0;
 
@@ -23,6 +29,7 @@ class HighlightParser {
       spans.add(TextSpan(
         text: fullText.substring(hl.startIndex, end),
         style: TextStyle(backgroundColor: Color(hl.colorCode)),
+        recognizer: onHighlightTap != null ? (TapGestureRecognizer()..onTap = () => onHighlightTap(hl)) : null,
       ));
       
       currentIndex = end;

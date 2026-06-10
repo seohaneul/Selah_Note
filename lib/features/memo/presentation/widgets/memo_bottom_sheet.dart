@@ -7,8 +7,15 @@ import '../../data/question_model.dart';
 
 class MemoBottomSheet extends StatefulWidget {
   final Verse verse;
+  final Memo? initialMemo;
+  final QuestionModel? initialQuestion;
 
-  const MemoBottomSheet({Key? key, required this.verse}) : super(key: key);
+  const MemoBottomSheet({
+    Key? key, 
+    required this.verse,
+    this.initialMemo,
+    this.initialQuestion,
+  }) : super(key: key);
 
   @override
   State<MemoBottomSheet> createState() => _MemoBottomSheetState();
@@ -25,32 +32,20 @@ class _MemoBottomSheetState extends State<MemoBottomSheet> with SingleTickerProv
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-    _loadData();
-  }
-
-  Future<void> _loadData() async {
-    final memo = await LocalDb.isar.memos.filter()
-      .bookNameEqualTo(widget.verse.bookName)
-      .chapterEqualTo(widget.verse.chapter)
-      .verseEqualTo(widget.verse.verse)
-      .findFirst();
-
-    final question = await LocalDb.isar.questionModels.filter()
-      .bibleTagsElementContains('${widget.verse.bookName} ${widget.verse.chapter}:${widget.verse.verse}')
-      .findFirst();
-
-    if (mounted) {
-      setState(() {
-        if (memo != null) {
-          _existingMemo = memo;
-          _memoController.text = memo.content;
-        }
-        if (question != null) {
-          _existingQuestion = question;
-          _questionController.text = question.questionText;
-        }
-      });
+    _tabController = TabController(
+      length: 2, 
+      vsync: this,
+      initialIndex: widget.initialQuestion != null ? 1 : 0,
+    );
+    
+    _existingMemo = widget.initialMemo;
+    _existingQuestion = widget.initialQuestion;
+    
+    if (_existingMemo != null) {
+      _memoController.text = _existingMemo!.content;
+    }
+    if (_existingQuestion != null) {
+      _questionController.text = _existingQuestion!.questionText;
     }
   }
 

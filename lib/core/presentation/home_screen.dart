@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../features/bible/presentation/bible_screen.dart';
 import '../../features/library/presentation/library_screen.dart';
+import '../../features/bible/data/highlight_model.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -24,13 +25,22 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void _onNavigateToLibraryHighlight(HighlightModel highlight) {
+    setState(() {
+      _currentIndex = 1; // 보관함 탭
+    });
+    Future.delayed(const Duration(milliseconds: 100), () {
+      _libraryScreenKey.currentState?.openHighlightDetail(highlight);
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: IndexedStack(
         index: _currentIndex,
         children: [
-          BibleScreen(key: _bibleScreenKey),
+          BibleScreen(key: _bibleScreenKey, onNavigateToLibraryHighlight: _onNavigateToLibraryHighlight),
           LibraryScreen(key: _libraryScreenKey, onNavigateToBible: _onNavigateToBible),
         ],
       ),

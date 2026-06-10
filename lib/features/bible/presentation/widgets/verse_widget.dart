@@ -10,8 +10,13 @@ import '../../../memo/data/memo_model.dart';
 
 class VerseWidget extends StatefulWidget {
   final Verse verse;
+  final Function(HighlightModel)? onHighlightTap;
 
-  const VerseWidget({Key? key, required this.verse}) : super(key: key);
+  const VerseWidget({
+    Key? key, 
+    required this.verse,
+    this.onHighlightTap,
+  }) : super(key: key);
 
   @override
   State<VerseWidget> createState() => _VerseWidgetState();
@@ -109,35 +114,35 @@ class _VerseWidgetState extends State<VerseWidget> {
             ),
             const SizedBox(width: 8),
             Expanded(
-              child: SelectionArea(
-                contextMenuBuilder: (context, selectableRegionState) {
-                  final List<ContextMenuButtonItem> buttonItems = selectableRegionState.contextMenuButtonItems;
+              // 드래그 하이라이트를 위한 SelectableText
+              child: SelectableText.rich(
+                TextSpan(
+                  style: Theme.of(context).textTheme.bodyLarge,
+                  children: HighlightParser.buildVerseSpans(
+                    widget.verse.text, 
+                    highlights,
+                    onHighlightTap: widget.onHighlightTap,
+                  ),
+                ),
+                onTap: _showActionMenu, // Text 자체 터치 시 팝업 띄우기
+                contextMenuBuilder: (context, editableTextState) {
+                  final List<ContextMenuButtonItem> buttonItems = editableTextState.contextMenuButtonItems;
                   buttonItems.insert(
                     0,
                     ContextMenuButtonItem(
                       label: '형광펜',
                       onPressed: () {
-                        final TextSelection selection = selectableRegionState.textEditingValue.selection;
+                        final TextSelection selection = editableTextState.textEditingValue.selection;
                         _addHighlight(selection.start, selection.end);
                         ContextMenuController.removeAny();
                       },
                     ),
                   );
                   return AdaptiveTextSelectionToolbar.buttonItems(
-                    anchors: selectableRegionState.contextMenuAnchors,
+                    anchors: editableTextState.contextMenuAnchors,
                     buttonItems: buttonItems,
                   );
                 },
-                child: GestureDetector(
-                  onTap: _showActionMenu,
-                  behavior: HitTestBehavior.opaque,
-                  child: Text.rich(
-                    TextSpan(
-                      style: Theme.of(context).textTheme.bodyLarge,
-                      children: HighlightParser.buildVerseSpans(widget.verse.text, highlights),
-                    ),
-                  ),
-                ),
               ),
             ),
           ],

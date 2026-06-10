@@ -3,7 +3,9 @@ import 'package:isar/isar.dart';
 import '../../memo/data/memo_model.dart';
 import '../../memo/data/question_model.dart';
 import '../../bible/data/highlight_model.dart';
+import '../../bible/presentation/widgets/highlight_detail_sheet.dart';
 import '../../memo/presentation/widgets/question_detail_sheet.dart';
+import '../../memo/presentation/widgets/memo_detail_sheet.dart';
 import '../../bible/data/bible_repository.dart';
 import '../../../core/database/local_db.dart'; 
 
@@ -112,75 +114,33 @@ class LibraryScreenState extends State<LibraryScreen> with SingleTickerProviderS
     }
   }
 
-  // --- 기존의 _showMemoOptions 등 팝업 코드 유지 ---
   void _showMemoOptions(Memo memo) {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.menu_book),
-                title: const Text('성경으로 이동'),
-                onTap: () {
-                  Navigator.pop(context);
-                  widget.onNavigateToBible(memo.bookName, memo.chapter, memo.verse);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.delete, color: Colors.red),
-                title: const Text('메모 삭제', style: TextStyle(color: Colors.red)),
-                onTap: () async {
-                  await LocalDb.isar.writeTxn(() async {
-                    await LocalDb.isar.memos.delete(memo.id);
-                  });
-                  Navigator.pop(context);
-                  loadData();
-                },
-              ),
-            ],
-          ),
-        );
-      }
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => MemoDetailSheet(
+        memo: memo,
+        onUpdate: loadData,
+      ),
     );
   }
 
   void _showHighlightOptions(HighlightModel highlight) {
     showModalBottomSheet(
       context: context,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
-      builder: (context) {
-        return SafeArea(
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ListTile(
-                leading: const Icon(Icons.menu_book),
-                title: const Text('성경으로 이동'),
-                onTap: () {
-                  Navigator.pop(context);
-                  widget.onNavigateToBible(highlight.bookName, highlight.chapter, highlight.verse);
-                },
-              ),
-              ListTile(
-                leading: const Icon(Icons.delete, color: Colors.red),
-                title: const Text('형광펜 삭제', style: TextStyle(color: Colors.red)),
-                onTap: () async {
-                  await LocalDb.isar.writeTxn(() async {
-                    await LocalDb.isar.highlightModels.delete(highlight.id);
-                  });
-                  Navigator.pop(context);
-                  loadData();
-                },
-              ),
-            ],
-          ),
-        );
-      }
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (context) => HighlightDetailSheet(
+        highlight: highlight,
+        onUpdate: loadData,
+      ),
     );
+  }
+
+  void openHighlightDetail(HighlightModel highlight) {
+    _tabController.animateTo(2); // 형광펜 탭으로 이동
+    _showHighlightOptions(highlight);
   }
 
   // --- UI 렌더링 ---
@@ -263,6 +223,29 @@ class LibraryScreenState extends State<LibraryScreen> with SingleTickerProviderS
           ),
         ],
       ),
+      floatingActionButton: isQuestionTab
+          ? FloatingActionButton.extended(
+              onPressed: () {
+                showModalBottomSheet(
+                  context: context,
+                  isScrollControlled: true,
+                  backgroundColor: Colors.transparent,
+                  builder: (context) => QuestionDetailSheet(
+                    question: QuestionModel(
+                      questionText: '',
+                      isResolved: false,
+                      bibleTags: const [],
+                      createdAt: DateTime.now(),
+                      updatedAt: DateTime.now(),
+                    ),
+                    onUpdate: loadData,
+                  ),
+                );
+              },
+              icon: const Icon(Icons.add),
+              label: const Text('새 질문 작성'),
+            )
+          : null,
     );
   }
 

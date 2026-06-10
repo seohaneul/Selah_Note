@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:isar/isar.dart';
 import '../../data/question_model.dart';
 import '../../../../core/database/local_db.dart';
 
@@ -17,28 +18,52 @@ class QuestionDetailSheet extends StatefulWidget {
 }
 
 class _QuestionDetailSheetState extends State<QuestionDetailSheet> {
+  final TextEditingController _questionController = TextEditingController();
   final TextEditingController _answerController = TextEditingController();
   late bool _isResolved;
 
   @override
   void initState() {
     super.initState();
+    _questionController.text = widget.question.questionText;
     _answerController.text = widget.question.answerText ?? '';
     _isResolved = widget.question.isResolved;
   }
 
+  List<String> _extractTags(String text) {
+    final List<String> tags = [];
+    // 정규식: @로 시작하고 성경책 이름, 장, 절을 포함하는 패턴 (예: @요한복음 3:16)
+    final RegExp tagRegExp = RegExp(r'@([가-힣]+\s*\d+:\d+)');
+    final Iterable<RegExpMatch> matches = tagRegExp.allMatches(text);
+    for (final match in matches) {
+      if (match.groupCount >= 1) {
+        tags.add(match.group(1)!);
+      }
+    }
+    return tags;
+  }
+
   Future<void> _saveAnswer() async {
+    final questionText = _questionController.text.trim();
+    if (questionText.isEmpty) return; // 질문 내용이 없으면 저장하지 않음
+
     final answer = _answerController.text.trim();
     
+    // 새로 추출된 태그와 기존 태그 병합
+    final newTags = _extractTags(questionText);
+    final combinedTags = {...widget.question.bibleTags, ...newTags}.toList();
+    
     final updatedQuestion = QuestionModel(
-      questionText: widget.question.questionText,
+      questionText: questionText,
       answerText: answer.isEmpty ? null : answer,
       isResolved: _isResolved,
-      bibleTags: widget.question.bibleTags,
+      bibleTags: combinedTags,
       createdAt: widget.question.createdAt,
       updatedAt: DateTime.now(),
     );
-    updatedQuestion.id = widget.question.id;
+    if (widget.question.id != Isar.autoIncrement) {
+      updatedQuestion.id = widget.question.id;
+    }
 
     await LocalDb.isar.writeTxn(() async {
       await LocalDb.isar.questionModels.put(updatedQuestion);
@@ -108,7 +133,17 @@ class _QuestionDetailSheetState extends State<QuestionDetailSheet> {
                     ],
                   ),
                   const SizedBox(height: 8),
-                  Text(widget.question.questionText, style: const TextStyle(fontSize: 16)),
+                  TextField(
+                    controller: _questionController,
+                    maxLines: 2,
+                    decoration: const InputDecoration(
+                      hintText: '여기에 질문 내용을 입력하세요. (예: @요한복음 3:16 무슨 뜻일까?)',
+                      border: InputBorder.none,
+                      isDense: true,
+                      contentPadding: EdgeInsets.zero,
+                    ),
+                    style: const TextStyle(fontSize: 16),
+                  ),
                 ],
               ),
             ),

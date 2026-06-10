@@ -4,8 +4,12 @@ import '../data/bible_model.dart';
 import 'widgets/verse_widget.dart';
 import 'widgets/chapter_selector_sheet.dart';
 
+import '../data/highlight_model.dart';
+
 class BibleScreen extends StatefulWidget {
-  const BibleScreen({Key? key}) : super(key: key);
+  final Function(HighlightModel)? onNavigateToLibraryHighlight;
+
+  const BibleScreen({Key? key, this.onNavigateToLibraryHighlight}) : super(key: key);
 
   @override
   State<BibleScreen> createState() => BibleScreenState();
@@ -167,7 +171,10 @@ class BibleScreenState extends State<BibleScreen> {
                 return Padding(
                   key: _verseKeys[verse.verse],
                   padding: const EdgeInsets.only(bottom: 20.0),
-                  child: VerseWidget(verse: verse),
+                  child: VerseWidget(
+                    verse: verse,
+                    onHighlightTap: widget.onNavigateToLibraryHighlight,
+                  ),
                 );
               }).toList(),
             ),
