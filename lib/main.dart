@@ -3,6 +3,8 @@ import 'core/theme/app_theme.dart';
 import 'features/bible/presentation/bible_screen.dart';
 import 'core/database/local_db.dart';
 
+import 'core/presentation/home_screen.dart';
+
 void main() async {
   // DB 등 비동기 초기화를 위해 Flutter 엔진 바인딩
   WidgetsFlutterBinding.ensureInitialized();
@@ -22,8 +24,7 @@ class SelahNoteApp extends StatelessWidget {
       title: 'Selah Note',
       theme: AppTheme.lightTheme,
       debugShowCheckedModeBanner: false,
-      // 앱의 첫 화면을 성경 본문 뷰어로 설정
-      home: const BibleScreen(),
+      home: const HomeScreen(),
     );
   }
 }

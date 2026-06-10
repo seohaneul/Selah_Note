@@ -8,14 +8,29 @@ class BibleScreen extends StatefulWidget {
   const BibleScreen({Key? key}) : super(key: key);
 
   @override
-  State<BibleScreen> createState() => _BibleScreenState();
+  State<BibleScreen> createState() => BibleScreenState();
 }
 
-class _BibleScreenState extends State<BibleScreen> {
+class BibleScreenState extends State<BibleScreen> {
   bool isLoading = true;
   int _currentPageIndex = 0;
   final ScrollController _scrollController = ScrollController();
   final Map<int, GlobalKey> _verseKeys = {};
+
+  void jumpToBibleVerse(String bookName, int chapter, int verse) {
+    final targetIndex = BibleRepository.allChapters.indexWhere(
+      (entry) => entry.key == bookName && entry.value == chapter
+    );
+    if (targetIndex != -1) {
+      setState(() {
+        _currentPageIndex = targetIndex;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _scrollToVerse(verse);
+      });
+    }
+  }
+
 
   @override
   void initState() {
