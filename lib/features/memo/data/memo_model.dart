@@ -1,5 +1,11 @@
+import 'package:isar/isar.dart';
+
+part 'memo_model.g.dart';
+
+@collection
 class Memo {
-  final String id;
+  Id id = Isar.autoIncrement;
+
   final int bookId;
   final int chapter;
   final int verse;
@@ -8,7 +14,6 @@ class Memo {
   final DateTime createdAt;
 
   Memo({
-    required this.id,
     required this.bookId,
     required this.chapter,
     required this.verse,
@@ -19,7 +24,6 @@ class Memo {
 
   factory Memo.fromJson(Map<String, dynamic> json) {
     return Memo(
-      id: json['id'],
       bookId: json['bookId'],
       chapter: json['chapter'],
       verse: json['verse'],

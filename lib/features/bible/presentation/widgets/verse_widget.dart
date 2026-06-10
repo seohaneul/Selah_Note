@@ -1,27 +1,37 @@
 import 'package:flutter/material.dart';
 import '../../data/bible_model.dart';
+import '../../data/highlight_model.dart';
 import '../../../../core/utils/highlight_parser.dart';
 import '../../../memo/presentation/widgets/memo_bottom_sheet.dart';
 
 class VerseWidget extends StatefulWidget {
   final Verse verse;
+  final int bookId;
+  final int chapter;
 
-  const VerseWidget({Key? key, required this.verse}) : super(key: key);
+  const VerseWidget({Key? key, required this.verse, required this.bookId, required this.chapter}) : super(key: key);
 
   @override
   State<VerseWidget> createState() => _VerseWidgetState();
 }
 
 class _VerseWidgetState extends State<VerseWidget> {
-  // 샘플 하이라이트 (실제로는 DB에서 로드)
-  List<HighlightData> highlights = [];
-  bool hasMemo = false; // 샘플 플래그
+  List<HighlightModel> highlights = [];
+  bool hasMemo = false; 
 
   @override
   void initState() {
     super.initState();
+    // 초기 로딩용 샘플 하이라이트 추가
     if (widget.verse.verse == 1) {
-      highlights.add(HighlightData(startIndex: 4, endIndex: 8, color: Colors.orange.withOpacity(0.4)));
+      highlights.add(HighlightModel(
+        bookId: widget.bookId,
+        chapter: widget.chapter,
+        verse: widget.verse.verse,
+        startIndex: 4, 
+        endIndex: 8, 
+        colorCode: const Color(0x66D9A05B).value,
+      ));
       hasMemo = true;
     }
   }
@@ -30,9 +40,7 @@ class _VerseWidgetState extends State<VerseWidget> {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
+      backgroundColor: Colors.transparent,
       builder: (context) => MemoBottomSheet(verse: widget.verse),
     );
   }
@@ -41,35 +49,42 @@ class _VerseWidgetState extends State<VerseWidget> {
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: _showMemoOptions,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // 절 번호 및 메모 아이콘
-          SizedBox(
-            width: 30,
-            child: Column(
-              children: [
-                Text(
-                  '${widget.verse.verse}',
-                  style: const TextStyle(color: Colors.grey, fontWeight: FontWeight.bold),
-                ),
-                if (hasMemo)
-                  const Icon(Icons.edit_note, size: 16, color: Colors.grey),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          
-          // 텍스트 본문 (하이라이트 적용)
-          Expanded(
-            child: RichText(
-              text: TextSpan(
-                style: Theme.of(context).textTheme.bodyLarge,
-                children: HighlightParser.buildVerseSpans(widget.verse.text, highlights),
+      child: Container(
+        color: Colors.transparent, // 터치 영역 확보용
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              width: 32,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    '${widget.verse.verse}',
+                    style: TextStyle(
+                      color: Theme.of(context).colorScheme.primary, 
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                  if (hasMemo) ...[
+                    const SizedBox(height: 4),
+                    Icon(Icons.edit_note_rounded, size: 18, color: Theme.of(context).colorScheme.primary),
+                  ],
+                ],
               ),
             ),
-          ),
-        ],
+            const SizedBox(width: 8),
+            Expanded(
+              child: RichText(
+                text: TextSpan(
+                  style: Theme.of(context).textTheme.bodyLarge,
+                  children: HighlightParser.buildVerseSpans(widget.verse.text, highlights),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

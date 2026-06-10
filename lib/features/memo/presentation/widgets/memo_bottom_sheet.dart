@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../bible/data/bible_model.dart';
+import '../../../bible/data/bible_model.dart';
 
 class MemoBottomSheet extends StatelessWidget {
   final Verse verse;

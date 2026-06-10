@@ -1,16 +1,17 @@
-// TODO: Add isar or sqflite package dependency
-// import 'package:isar/isar.dart';
+import 'package:isar/isar.dart';
+import 'package:path_provider/path_provider.dart';
+import '../../features/bible/data/highlight_model.dart';
+import '../../features/memo/data/memo_model.dart';
 
 class LocalDb {
-  // static late Isar isar;
+  static late Isar isar;
 
   static Future<void> initialize() async {
-    // Isar 데이터베이스 초기화 로직
-    // final dir = await getApplicationDocumentsDirectory();
-    // isar = await Isar.open(
-    //   [HighlightSchema, MemoSchema],
-    //   directory: dir.path,
-    // );
-    print("Local DB initialized (mock)");
+    final dir = await getApplicationDocumentsDirectory();
+    isar = await Isar.open(
+      [HighlightModelSchema, MemoSchema],
+      directory: dir.path,
+    );
+    print("Local DB (Isar) initialized successfully.");
   }
 }

@@ -1,5 +1,7 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
-import '../../data/bible_model.dart';
+import 'package:flutter/services.dart';
+import '../data/bible_model.dart';
 import 'widgets/verse_widget.dart';
 
 class BibleScreen extends StatefulWidget {
@@ -10,38 +12,40 @@ class BibleScreen extends StatefulWidget {
 }
 
 class _BibleScreenState extends State<BibleScreen> {
-  // 샘플 데이터
-  late BibleBook sampleBook;
+  BibleBook? bibleBook;
 
   @override
   void initState() {
     super.initState();
-    sampleBook = BibleBook(
-      bookId: 1,
-      bookName: "창세기",
-      chapter: 1,
-      verses: [
-        Verse(verse: 1, text: "태초에 하나님이 천지를 창조하시니라"),
-        Verse(verse: 2, text: "땅이 혼돈하고 공허하며 흑암이 깊음 위에 있고 하나님의 영은 수면 위에 운행하시니라"),
-      ],
-    );
+    _loadBibleData();
+  }
+
+  Future<void> _loadBibleData() async {
+    // 실제 에셋 파일에서 읽어옵니다.
+    final String response = await rootBundle.loadString('assets/bible_genesis_1.json');
+    final data = await json.decode(response);
+    setState(() {
+      bibleBook = BibleBook.fromJson(data);
+    });
   }
 
   @override
   Widget build(BuildContext context) {
+    if (bibleBook == null) {
+      return const Scaffold(body: Center(child: CircularProgressIndicator()));
+    }
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('${sampleBook.bookName} ${sampleBook.chapter}장'),
+        title: Text('${bibleBook!.bookName} ${bibleBook!.chapter}장'),
       ),
-      body: ListView.builder(
-        padding: const EdgeInsets.all(16.0),
-        itemCount: sampleBook.verses.length,
+      body: ListView.separated(
+        padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
+        itemCount: bibleBook!.verses.length,
+        separatorBuilder: (context, index) => const SizedBox(height: 20),
         itemBuilder: (context, index) {
-          final verse = sampleBook.verses[index];
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 12.0),
-            child: VerseWidget(verse: verse),
-          );
+          final verse = bibleBook!.verses[index];
+          return VerseWidget(verse: verse, bookId: bibleBook!.bookId, chapter: bibleBook!.chapter);
         },
       ),
     );
