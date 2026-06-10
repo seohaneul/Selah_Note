@@ -13,15 +13,15 @@ class Memo {
   @Index()
   final int verse;
   final String content;
-  final String status; // 'general', 'unresolved_question', 'resolved_question'
   final DateTime createdAt;
+  final DateTime updatedAt;
 
   Memo({
     required this.bookName,
     required this.chapter,
     required this.verse,
     required this.content,
-    required this.status,
     required this.createdAt,
+    required this.updatedAt,
   });
 }

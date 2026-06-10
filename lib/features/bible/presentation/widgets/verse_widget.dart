@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'verse_action_sheet.dart';
 import 'package:isar/isar.dart';
 import '../../data/bible_model.dart';
 import '../../data/highlight_model.dart';
@@ -55,6 +56,8 @@ class _VerseWidgetState extends State<VerseWidget> {
       startIndex: start,
       endIndex: end,
       colorCode: const Color(0x66D9A05B).value, // 주황색 하이라이트
+      highlightedText: widget.verse.text.substring(start, end),
+      createdAt: DateTime.now(),
     );
     
     await LocalDb.isar.writeTxn(() async {
@@ -64,21 +67,21 @@ class _VerseWidgetState extends State<VerseWidget> {
     _loadData();
   }
 
-  void _showMemoOptions() async {
-    await showModalBottomSheet(
+  void _showActionMenu() {
+    showModalBottomSheet(
       context: context,
-      isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (context) => MemoBottomSheet(verse: widget.verse),
+      builder: (context) => VerseActionSheet(
+        verse: widget.verse,
+        onActionCompleted: _loadData,
+      ),
     );
-    // 바텀시트가 닫힌 후 데이터 다시 로드 (메모 작성 여부 업데이트)
-    _loadData();
   }
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: _showMemoOptions,
+      onTap: _showActionMenu,
       child: Container(
         color: Colors.transparent,
         child: Row(

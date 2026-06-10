@@ -15,6 +15,10 @@ class HighlightModel {
   final int startIndex;
   final int endIndex;
   final int colorCode; 
+  
+  final String highlightedText;
+  final String? comment;
+  final DateTime createdAt;
 
   HighlightModel({
     required this.bookName,
@@ -23,5 +27,8 @@ class HighlightModel {
     required this.startIndex,
     required this.endIndex,
     required this.colorCode,
+    required this.highlightedText,
+    this.comment,
+    required this.createdAt,
   });
 }

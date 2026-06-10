@@ -37,10 +37,10 @@ const MemoSchema = CollectionSchema(
       name: r'createdAt',
       type: IsarType.dateTime,
     ),
-    r'status': PropertySchema(
+    r'updatedAt': PropertySchema(
       id: 4,
-      name: r'status',
-      type: IsarType.string,
+      name: r'updatedAt',
+      type: IsarType.dateTime,
     ),
     r'verse': PropertySchema(
       id: 5,
@@ -110,7 +110,6 @@ int _memoEstimateSize(
   var bytesCount = offsets.last;
   bytesCount += 3 + object.bookName.length * 3;
   bytesCount += 3 + object.content.length * 3;
-  bytesCount += 3 + object.status.length * 3;
   return bytesCount;
 }
 
@@ -124,7 +123,7 @@ void _memoSerialize(
   writer.writeLong(offsets[1], object.chapter);
   writer.writeString(offsets[2], object.content);
   writer.writeDateTime(offsets[3], object.createdAt);
-  writer.writeString(offsets[4], object.status);
+  writer.writeDateTime(offsets[4], object.updatedAt);
   writer.writeLong(offsets[5], object.verse);
 }
 
@@ -139,7 +138,7 @@ Memo _memoDeserialize(
     chapter: reader.readLong(offsets[1]),
     content: reader.readString(offsets[2]),
     createdAt: reader.readDateTime(offsets[3]),
-    status: reader.readString(offsets[4]),
+    updatedAt: reader.readDateTime(offsets[4]),
     verse: reader.readLong(offsets[5]),
   );
   object.id = id;
@@ -162,7 +161,7 @@ P _memoDeserializeProp<P>(
     case 3:
       return (reader.readDateTime(offset)) as P;
     case 4:
-      return (reader.readString(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 5:
       return (reader.readLong(offset)) as P;
     default:
@@ -908,130 +907,55 @@ extension MemoQueryFilter on QueryBuilder<Memo, Memo, QFilterCondition> {
     });
   }
 
-  QueryBuilder<Memo, Memo, QAfterFilterCondition> statusEqualTo(
-    String value, {
-    bool caseSensitive = true,
-  }) {
+  QueryBuilder<Memo, Memo, QAfterFilterCondition> updatedAtEqualTo(
+      DateTime value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'status',
+        property: r'updatedAt',
         value: value,
-        caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<Memo, Memo, QAfterFilterCondition> statusGreaterThan(
-    String value, {
+  QueryBuilder<Memo, Memo, QAfterFilterCondition> updatedAtGreaterThan(
+    DateTime value, {
     bool include = false,
-    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.greaterThan(
         include: include,
-        property: r'status',
+        property: r'updatedAt',
         value: value,
-        caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<Memo, Memo, QAfterFilterCondition> statusLessThan(
-    String value, {
+  QueryBuilder<Memo, Memo, QAfterFilterCondition> updatedAtLessThan(
+    DateTime value, {
     bool include = false,
-    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.lessThan(
         include: include,
-        property: r'status',
+        property: r'updatedAt',
         value: value,
-        caseSensitive: caseSensitive,
       ));
     });
   }
 
-  QueryBuilder<Memo, Memo, QAfterFilterCondition> statusBetween(
-    String lower,
-    String upper, {
+  QueryBuilder<Memo, Memo, QAfterFilterCondition> updatedAtBetween(
+    DateTime lower,
+    DateTime upper, {
     bool includeLower = true,
     bool includeUpper = true,
-    bool caseSensitive = true,
   }) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.between(
-        property: r'status',
+        property: r'updatedAt',
         lower: lower,
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Memo, Memo, QAfterFilterCondition> statusStartsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.startsWith(
-        property: r'status',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Memo, Memo, QAfterFilterCondition> statusEndsWith(
-    String value, {
-    bool caseSensitive = true,
-  }) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.endsWith(
-        property: r'status',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Memo, Memo, QAfterFilterCondition> statusContains(String value,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.contains(
-        property: r'status',
-        value: value,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Memo, Memo, QAfterFilterCondition> statusMatches(String pattern,
-      {bool caseSensitive = true}) {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.matches(
-        property: r'status',
-        wildcard: pattern,
-        caseSensitive: caseSensitive,
-      ));
-    });
-  }
-
-  QueryBuilder<Memo, Memo, QAfterFilterCondition> statusIsEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.equalTo(
-        property: r'status',
-        value: '',
-      ));
-    });
-  }
-
-  QueryBuilder<Memo, Memo, QAfterFilterCondition> statusIsNotEmpty() {
-    return QueryBuilder.apply(this, (query) {
-      return query.addFilterCondition(FilterCondition.greaterThan(
-        property: r'status',
-        value: '',
       ));
     });
   }
@@ -1142,15 +1066,15 @@ extension MemoQuerySortBy on QueryBuilder<Memo, Memo, QSortBy> {
     });
   }
 
-  QueryBuilder<Memo, Memo, QAfterSortBy> sortByStatus() {
+  QueryBuilder<Memo, Memo, QAfterSortBy> sortByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'status', Sort.asc);
+      return query.addSortBy(r'updatedAt', Sort.asc);
     });
   }
 
-  QueryBuilder<Memo, Memo, QAfterSortBy> sortByStatusDesc() {
+  QueryBuilder<Memo, Memo, QAfterSortBy> sortByUpdatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'status', Sort.desc);
+      return query.addSortBy(r'updatedAt', Sort.desc);
     });
   }
 
@@ -1228,15 +1152,15 @@ extension MemoQuerySortThenBy on QueryBuilder<Memo, Memo, QSortThenBy> {
     });
   }
 
-  QueryBuilder<Memo, Memo, QAfterSortBy> thenByStatus() {
+  QueryBuilder<Memo, Memo, QAfterSortBy> thenByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'status', Sort.asc);
+      return query.addSortBy(r'updatedAt', Sort.asc);
     });
   }
 
-  QueryBuilder<Memo, Memo, QAfterSortBy> thenByStatusDesc() {
+  QueryBuilder<Memo, Memo, QAfterSortBy> thenByUpdatedAtDesc() {
     return QueryBuilder.apply(this, (query) {
-      return query.addSortBy(r'status', Sort.desc);
+      return query.addSortBy(r'updatedAt', Sort.desc);
     });
   }
 
@@ -1280,10 +1204,9 @@ extension MemoQueryWhereDistinct on QueryBuilder<Memo, Memo, QDistinct> {
     });
   }
 
-  QueryBuilder<Memo, Memo, QDistinct> distinctByStatus(
-      {bool caseSensitive = true}) {
+  QueryBuilder<Memo, Memo, QDistinct> distinctByUpdatedAt() {
     return QueryBuilder.apply(this, (query) {
-      return query.addDistinctBy(r'status', caseSensitive: caseSensitive);
+      return query.addDistinctBy(r'updatedAt');
     });
   }
 
@@ -1325,9 +1248,9 @@ extension MemoQueryProperty on QueryBuilder<Memo, Memo, QQueryProperty> {
     });
   }
 
-  QueryBuilder<Memo, String, QQueryOperations> statusProperty() {
+  QueryBuilder<Memo, DateTime, QQueryOperations> updatedAtProperty() {
     return QueryBuilder.apply(this, (query) {
-      return query.addPropertyName(r'status');
+      return query.addPropertyName(r'updatedAt');
     });
   }
 

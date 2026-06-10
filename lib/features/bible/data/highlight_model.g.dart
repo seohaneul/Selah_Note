@@ -32,18 +32,33 @@ const HighlightModelSchema = CollectionSchema(
       name: r'colorCode',
       type: IsarType.long,
     ),
-    r'endIndex': PropertySchema(
+    r'comment': PropertySchema(
       id: 3,
+      name: r'comment',
+      type: IsarType.string,
+    ),
+    r'createdAt': PropertySchema(
+      id: 4,
+      name: r'createdAt',
+      type: IsarType.dateTime,
+    ),
+    r'endIndex': PropertySchema(
+      id: 5,
       name: r'endIndex',
       type: IsarType.long,
     ),
+    r'highlightedText': PropertySchema(
+      id: 6,
+      name: r'highlightedText',
+      type: IsarType.string,
+    ),
     r'startIndex': PropertySchema(
-      id: 4,
+      id: 7,
       name: r'startIndex',
       type: IsarType.long,
     ),
     r'verse': PropertySchema(
-      id: 5,
+      id: 8,
       name: r'verse',
       type: IsarType.long,
     )
@@ -109,6 +124,13 @@ int _highlightModelEstimateSize(
 ) {
   var bytesCount = offsets.last;
   bytesCount += 3 + object.bookName.length * 3;
+  {
+    final value = object.comment;
+    if (value != null) {
+      bytesCount += 3 + value.length * 3;
+    }
+  }
+  bytesCount += 3 + object.highlightedText.length * 3;
   return bytesCount;
 }
 
@@ -121,9 +143,12 @@ void _highlightModelSerialize(
   writer.writeString(offsets[0], object.bookName);
   writer.writeLong(offsets[1], object.chapter);
   writer.writeLong(offsets[2], object.colorCode);
-  writer.writeLong(offsets[3], object.endIndex);
-  writer.writeLong(offsets[4], object.startIndex);
-  writer.writeLong(offsets[5], object.verse);
+  writer.writeString(offsets[3], object.comment);
+  writer.writeDateTime(offsets[4], object.createdAt);
+  writer.writeLong(offsets[5], object.endIndex);
+  writer.writeString(offsets[6], object.highlightedText);
+  writer.writeLong(offsets[7], object.startIndex);
+  writer.writeLong(offsets[8], object.verse);
 }
 
 HighlightModel _highlightModelDeserialize(
@@ -136,9 +161,12 @@ HighlightModel _highlightModelDeserialize(
     bookName: reader.readString(offsets[0]),
     chapter: reader.readLong(offsets[1]),
     colorCode: reader.readLong(offsets[2]),
-    endIndex: reader.readLong(offsets[3]),
-    startIndex: reader.readLong(offsets[4]),
-    verse: reader.readLong(offsets[5]),
+    comment: reader.readStringOrNull(offsets[3]),
+    createdAt: reader.readDateTime(offsets[4]),
+    endIndex: reader.readLong(offsets[5]),
+    highlightedText: reader.readString(offsets[6]),
+    startIndex: reader.readLong(offsets[7]),
+    verse: reader.readLong(offsets[8]),
   );
   object.id = id;
   return object;
@@ -158,10 +186,16 @@ P _highlightModelDeserializeProp<P>(
     case 2:
       return (reader.readLong(offset)) as P;
     case 3:
-      return (reader.readLong(offset)) as P;
+      return (reader.readStringOrNull(offset)) as P;
     case 4:
-      return (reader.readLong(offset)) as P;
+      return (reader.readDateTime(offset)) as P;
     case 5:
+      return (reader.readLong(offset)) as P;
+    case 6:
+      return (reader.readString(offset)) as P;
+    case 7:
+      return (reader.readLong(offset)) as P;
+    case 8:
       return (reader.readLong(offset)) as P;
     default:
       throw IsarError('Unknown property with id $propertyId');
@@ -758,6 +792,216 @@ extension HighlightModelQueryFilter
   }
 
   QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
+      commentIsNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNull(
+        property: r'comment',
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
+      commentIsNotNull() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(const FilterCondition.isNotNull(
+        property: r'comment',
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
+      commentEqualTo(
+    String? value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'comment',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
+      commentGreaterThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'comment',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
+      commentLessThan(
+    String? value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'comment',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
+      commentBetween(
+    String? lower,
+    String? upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'comment',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
+      commentStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'comment',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
+      commentEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'comment',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
+      commentContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'comment',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
+      commentMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'comment',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
+      commentIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'comment',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
+      commentIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'comment',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
+      createdAtEqualTo(DateTime value) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'createdAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
+      createdAtGreaterThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'createdAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
+      createdAtLessThan(
+    DateTime value, {
+    bool include = false,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'createdAt',
+        value: value,
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
+      createdAtBetween(
+    DateTime lower,
+    DateTime upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'createdAt',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
       endIndexEqualTo(int value) {
     return QueryBuilder.apply(this, (query) {
       return query.addFilterCondition(FilterCondition.equalTo(
@@ -809,6 +1053,142 @@ extension HighlightModelQueryFilter
         includeLower: includeLower,
         upper: upper,
         includeUpper: includeUpper,
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
+      highlightedTextEqualTo(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'highlightedText',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
+      highlightedTextGreaterThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        include: include,
+        property: r'highlightedText',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
+      highlightedTextLessThan(
+    String value, {
+    bool include = false,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.lessThan(
+        include: include,
+        property: r'highlightedText',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
+      highlightedTextBetween(
+    String lower,
+    String upper, {
+    bool includeLower = true,
+    bool includeUpper = true,
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.between(
+        property: r'highlightedText',
+        lower: lower,
+        includeLower: includeLower,
+        upper: upper,
+        includeUpper: includeUpper,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
+      highlightedTextStartsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.startsWith(
+        property: r'highlightedText',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
+      highlightedTextEndsWith(
+    String value, {
+    bool caseSensitive = true,
+  }) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.endsWith(
+        property: r'highlightedText',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
+      highlightedTextContains(String value, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.contains(
+        property: r'highlightedText',
+        value: value,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
+      highlightedTextMatches(String pattern, {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.matches(
+        property: r'highlightedText',
+        wildcard: pattern,
+        caseSensitive: caseSensitive,
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
+      highlightedTextIsEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.equalTo(
+        property: r'highlightedText',
+        value: '',
+      ));
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterFilterCondition>
+      highlightedTextIsNotEmpty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addFilterCondition(FilterCondition.greaterThan(
+        property: r'highlightedText',
+        value: '',
       ));
     });
   }
@@ -1028,6 +1408,32 @@ extension HighlightModelQuerySortBy
     });
   }
 
+  QueryBuilder<HighlightModel, HighlightModel, QAfterSortBy> sortByComment() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'comment', Sort.asc);
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterSortBy>
+      sortByCommentDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'comment', Sort.desc);
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterSortBy> sortByCreatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'createdAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterSortBy>
+      sortByCreatedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'createdAt', Sort.desc);
+    });
+  }
+
   QueryBuilder<HighlightModel, HighlightModel, QAfterSortBy> sortByEndIndex() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'endIndex', Sort.asc);
@@ -1038,6 +1444,20 @@ extension HighlightModelQuerySortBy
       sortByEndIndexDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'endIndex', Sort.desc);
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterSortBy>
+      sortByHighlightedText() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'highlightedText', Sort.asc);
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterSortBy>
+      sortByHighlightedTextDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'highlightedText', Sort.desc);
     });
   }
 
@@ -1109,6 +1529,32 @@ extension HighlightModelQuerySortThenBy
     });
   }
 
+  QueryBuilder<HighlightModel, HighlightModel, QAfterSortBy> thenByComment() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'comment', Sort.asc);
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterSortBy>
+      thenByCommentDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'comment', Sort.desc);
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterSortBy> thenByCreatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'createdAt', Sort.asc);
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterSortBy>
+      thenByCreatedAtDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'createdAt', Sort.desc);
+    });
+  }
+
   QueryBuilder<HighlightModel, HighlightModel, QAfterSortBy> thenByEndIndex() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'endIndex', Sort.asc);
@@ -1119,6 +1565,20 @@ extension HighlightModelQuerySortThenBy
       thenByEndIndexDesc() {
     return QueryBuilder.apply(this, (query) {
       return query.addSortBy(r'endIndex', Sort.desc);
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterSortBy>
+      thenByHighlightedText() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'highlightedText', Sort.asc);
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QAfterSortBy>
+      thenByHighlightedTextDesc() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addSortBy(r'highlightedText', Sort.desc);
     });
   }
 
@@ -1183,9 +1643,31 @@ extension HighlightModelQueryWhereDistinct
     });
   }
 
+  QueryBuilder<HighlightModel, HighlightModel, QDistinct> distinctByComment(
+      {bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'comment', caseSensitive: caseSensitive);
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QDistinct>
+      distinctByCreatedAt() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'createdAt');
+    });
+  }
+
   QueryBuilder<HighlightModel, HighlightModel, QDistinct> distinctByEndIndex() {
     return QueryBuilder.apply(this, (query) {
       return query.addDistinctBy(r'endIndex');
+    });
+  }
+
+  QueryBuilder<HighlightModel, HighlightModel, QDistinct>
+      distinctByHighlightedText({bool caseSensitive = true}) {
+    return QueryBuilder.apply(this, (query) {
+      return query.addDistinctBy(r'highlightedText',
+          caseSensitive: caseSensitive);
     });
   }
 
@@ -1229,9 +1711,28 @@ extension HighlightModelQueryProperty
     });
   }
 
+  QueryBuilder<HighlightModel, String?, QQueryOperations> commentProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'comment');
+    });
+  }
+
+  QueryBuilder<HighlightModel, DateTime, QQueryOperations> createdAtProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'createdAt');
+    });
+  }
+
   QueryBuilder<HighlightModel, int, QQueryOperations> endIndexProperty() {
     return QueryBuilder.apply(this, (query) {
       return query.addPropertyName(r'endIndex');
+    });
+  }
+
+  QueryBuilder<HighlightModel, String, QQueryOperations>
+      highlightedTextProperty() {
+    return QueryBuilder.apply(this, (query) {
+      return query.addPropertyName(r'highlightedText');
     });
   }
 
