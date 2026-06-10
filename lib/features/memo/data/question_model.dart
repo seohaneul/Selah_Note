@@ -9,10 +9,9 @@ class QuestionModel {
   final String questionText;
   final String? answerText;
   final bool isResolved;
-  
-  // List of verse references like "요한복음 3:16"
+
   final List<String> bibleTags;
-  
+
   final DateTime createdAt;
   final DateTime updatedAt;
 
