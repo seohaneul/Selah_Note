@@ -3,14 +3,6 @@ import json
 import re
 
 def process_bible_txt(input_path, output_path):
-    """
-    Reads a raw text file containing bible verses and outputs a JSON file
-    formatted for the Selah Note app.
-    
-    Expected format per line:
-    "창1:1 태초에 하나님이 천지를 창조하시니라"
-    -> split by first space: key="창1:1", value="태초에 하나님이 천지를 창조하시니라"
-    """
     print(f"🔄 처리 중: {input_path} ...")
     
     data = {}
