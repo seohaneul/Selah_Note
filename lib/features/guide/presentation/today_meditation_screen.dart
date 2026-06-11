@@ -103,13 +103,17 @@ class _TodayMeditationScreenState extends State<TodayMeditationScreen> {
     }
   }
 
-  void _openRecords() {
-    showModalBottomSheet(
+  Future<void> _openRecords() async {
+    await showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
       builder: (context) => const MeditationRecordsSheet(),
     );
+    // 모달이 닫힌 후 수정된 내용이 있다면 화면 갱신
+    if (mounted) {
+      _loadExistingMeditation();
+    }
   }
 
   @override

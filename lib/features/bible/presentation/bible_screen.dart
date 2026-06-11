@@ -5,6 +5,8 @@ import 'widgets/verse_widget.dart';
 import 'widgets/chapter_selector_sheet.dart';
 
 import '../data/highlight_model.dart';
+import '../../../main.dart';
+import '../../../core/theme/app_theme.dart';
 
 class BibleScreen extends StatefulWidget {
   final Function(HighlightModel)? onNavigateToLibraryHighlight;
@@ -114,6 +116,52 @@ class BibleScreenState extends State<BibleScreen> {
     }
   }
 
+  void _showThemeSelector() {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return Container(
+          padding: const EdgeInsets.symmetric(vertical: 24, horizontal: 16),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('앱 테마(색감) 변경', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 16),
+              ListTile(
+                leading: const CircleAvatar(backgroundColor: Color(0xFFD9A05B), radius: 16),
+                title: const Text('웜 샌드 (Warm Sand)'),
+                onTap: () {
+                  appThemeNotifier.value = AppTheme.warmSandTheme;
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: const CircleAvatar(backgroundColor: Color(0xFF1A365D), radius: 16),
+                title: const Text('미드나이트 네이비 (Midnight Navy)'),
+                onTap: () {
+                  appThemeNotifier.value = AppTheme.midnightNavyTheme;
+                  Navigator.pop(context);
+                },
+              ),
+              ListTile(
+                leading: const CircleAvatar(backgroundColor: Color(0xFF6B8E23), radius: 16),
+                title: const Text('세이지 그린 (Sage Green)'),
+                onTap: () {
+                  appThemeNotifier.value = AppTheme.sageGreenTheme;
+                  Navigator.pop(context);
+                },
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     if (isLoading) {
@@ -147,6 +195,13 @@ class BibleScreenState extends State<BibleScreen> {
           ),
         ),
         centerTitle: true,
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.palette),
+            onPressed: _showThemeSelector,
+            tooltip: '테마 변경',
+          ),
+        ],
       ),
       body: GestureDetector(
         onHorizontalDragEnd: (details) {

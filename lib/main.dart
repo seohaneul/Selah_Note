@@ -3,6 +3,9 @@ import 'core/theme/app_theme.dart';
 import 'core/database/local_db.dart';
 import 'core/presentation/home_screen.dart';
 
+// 전역 테마 상태
+final ValueNotifier<ThemeData> appThemeNotifier = ValueNotifier(AppTheme.warmSandTheme);
+
 void main() async {
   // DB 등 비동기 초기화를 위해 Flutter 엔진 바인딩
   WidgetsFlutterBinding.ensureInitialized();
@@ -18,11 +21,16 @@ class SelahNoteApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Selah Note',
-      theme: AppTheme.lightTheme,
-      debugShowCheckedModeBanner: false,
-      home: const HomeScreen(),
+    return ValueListenableBuilder<ThemeData>(
+      valueListenable: appThemeNotifier,
+      builder: (context, theme, child) {
+        return MaterialApp(
+          title: 'Selah Note',
+          theme: theme,
+          debugShowCheckedModeBanner: false,
+          home: const HomeScreen(),
+        );
+      },
     );
   }
 }
