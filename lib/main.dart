@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
 import 'core/theme/app_theme.dart';
-import 'features/bible/presentation/bible_screen.dart';
 import 'core/database/local_db.dart';
-
 import 'core/presentation/home_screen.dart';
 
 void main() async {

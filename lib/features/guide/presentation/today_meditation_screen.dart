@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:isar/isar.dart';
 import '../data/daily_questions.dart';
 import '../data/daily_meditation_model.dart';
+import 'dart:math';
 import '../../../../core/database/local_db.dart';
 import 'meditation_records_sheet.dart';
 
@@ -26,12 +27,25 @@ class _TodayMeditationScreenState extends State<TodayMeditationScreen> {
   }
 
   void _determineTodayQuestion() {
-    // 1년 중 며칠째인지 계산하여 100개 질문 중 하나를 선택
     final now = DateTime.now();
     final startOfYear = DateTime(now.year, 1, 1);
     final dayOfYear = now.difference(startOfYear).inDays + 1;
-    final index = (dayOfYear - 1) % DailyQuestions.list.length;
-    _todayQuestion = DailyQuestions.list[index];
+    
+    // 100일 단위로 사이클을 계산하여 고정된 무작위 시드(seed) 생성
+    // 이렇게 하면 매일 순서가 바뀌지 않으면서도 100일 동안 질문이 겹치지 않음
+    final cycleNumber = (dayOfYear - 1) ~/ DailyQuestions.list.length; 
+    final seed = now.year * 1000 + cycleNumber;
+    final random = Random(seed);
+    
+    // 인덱스를 생성하고 무작위로 섞기
+    final indices = List.generate(DailyQuestions.list.length, (i) => i);
+    indices.shuffle(random);
+    
+    // 오늘의 날짜에 해당하는 무작위 인덱스 가져오기
+    final todayIndex = (dayOfYear - 1) % DailyQuestions.list.length;
+    final shuffledQuestionIndex = indices[todayIndex];
+    
+    _todayQuestion = DailyQuestions.list[shuffledQuestionIndex];
   }
 
   Future<void> _loadExistingMeditation() async {
