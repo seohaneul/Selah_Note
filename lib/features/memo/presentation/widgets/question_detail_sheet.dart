@@ -21,6 +21,7 @@ class _QuestionDetailSheetState extends State<QuestionDetailSheet> {
   final TextEditingController _questionController = TextEditingController();
   final TextEditingController _answerController = TextEditingController();
   late bool _isResolved;
+  late List<String> _currentTags;
 
   @override
   void initState() {
@@ -28,6 +29,7 @@ class _QuestionDetailSheetState extends State<QuestionDetailSheet> {
     _questionController.text = widget.question.questionText;
     _answerController.text = widget.question.answerText ?? '';
     _isResolved = widget.question.isResolved;
+    _currentTags = List.from(widget.question.bibleTags);
   }
 
   List<String> _extractTags(String text) {
@@ -49,9 +51,9 @@ class _QuestionDetailSheetState extends State<QuestionDetailSheet> {
 
     final answer = _answerController.text.trim();
     
-    // 새로 추출된 태그와 기존 태그 병합
+    // 새로 추출된 태그와 삭제되지 않은 기존 태그 병합
     final newTags = _extractTags(questionText);
-    final combinedTags = {...widget.question.bibleTags, ...newTags}.toList();
+    final combinedTags = {..._currentTags, ...newTags}.toList();
     
     final updatedQuestion = QuestionModel(
       questionText: questionText,
@@ -128,10 +130,28 @@ class _QuestionDetailSheetState extends State<QuestionDetailSheet> {
                       const SizedBox(width: 8),
                       const Text('나의 질문', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.orange)),
                       const Spacer(),
-                      if (widget.question.bibleTags.isNotEmpty)
-                        Text(widget.question.bibleTags.first, style: const TextStyle(fontSize: 12, color: Colors.black54)),
                     ],
                   ),
+                  if (_currentTags.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 8.0, bottom: 4.0),
+                      child: Wrap(
+                        spacing: 8.0,
+                        runSpacing: 4.0,
+                        children: _currentTags.map((tag) {
+                          return InputChip(
+                            label: Text(tag, style: const TextStyle(fontSize: 12, color: Colors.blue)),
+                            backgroundColor: Colors.blue.shade50,
+                            deleteIconColor: Colors.blue,
+                            onDeleted: () {
+                              setState(() {
+                                _currentTags.remove(tag);
+                              });
+                            },
+                          );
+                        }).toList(),
+                      ),
+                    ),
                   const SizedBox(height: 8),
                   TextField(
                     controller: _questionController,

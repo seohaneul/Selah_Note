@@ -158,48 +158,83 @@ class _TodayMeditationScreenState extends State<TodayMeditationScreen> {
             ),
             const SizedBox(height: 32),
             
-            // 답변 입력창
-            TextField(
-              controller: _answerController,
-              maxLines: 8,
-              decoration: InputDecoration(
-                hintText: '이 질문에 대한 나의 생각이나 기도를 자유롭게 적어보세요...',
-                filled: true,
-                fillColor: Colors.grey.shade50,
-                border: OutlineInputBorder(
+            if (_existingMeditation != null) ...[
+              Card(
+                elevation: 0,
+                color: Colors.grey.shade50,
+                shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
+                  side: BorderSide(color: Colors.grey.shade200),
                 ),
-                enabledBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: Colors.grey.shade300),
-                ),
-                focusedBorder: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(16),
-                  borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
+                child: Padding(
+                  padding: const EdgeInsets.all(20.0),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Row(
+                        children: [
+                          Icon(Icons.check_circle, color: Colors.green, size: 20),
+                          SizedBox(width: 8),
+                          Text('오늘의 묵상 기록 완료', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.green)),
+                        ],
+                      ),
+                      const SizedBox(height: 16),
+                      Text(
+                        _existingMeditation!.answerText,
+                        style: const TextStyle(fontSize: 16, height: 1.6, color: Colors.black87),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 24),
-            
-            // 저장 버튼
-            SizedBox(
-              width: double.infinity,
-              height: 56,
-              child: ElevatedButton(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: Theme.of(context).colorScheme.primary,
-                  foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                  elevation: 0,
-                ),
-                onPressed: _saveMeditation,
-                child: Text(
-                  _existingMeditation == null ? '조각 저장하기' : '조각 수정하기', 
-                  style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)
+              const SizedBox(height: 24),
+              Center(
+                child: TextButton.icon(
+                  onPressed: _openRecords,
+                  icon: const Icon(Icons.edit_note, color: Colors.grey),
+                  label: const Text('수정은 우측 상단의 "기록 보기"에서 가능합니다', style: TextStyle(color: Colors.grey, fontSize: 13)),
                 ),
               ),
-            ),
+            ] else ...[
+              // 답변 입력창
+              TextField(
+                controller: _answerController,
+                maxLines: 8,
+                decoration: InputDecoration(
+                  hintText: '이 질문에 대한 나의 생각이나 기도를 자유롭게 적어보세요...',
+                  filled: true,
+                  fillColor: Colors.grey.shade50,
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: Colors.grey.shade300),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(16),
+                    borderSide: BorderSide(color: Theme.of(context).colorScheme.primary),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 24),
+              // 저장 버튼
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: Theme.of(context).colorScheme.primary,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                    elevation: 0,
+                  ),
+                  onPressed: _saveMeditation,
+                  child: const Text('조각 저장하기', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold)),
+                ),
+              ),
+            ],
           ],
         ),
       ),

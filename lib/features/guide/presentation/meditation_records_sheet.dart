@@ -60,6 +60,47 @@ class _MeditationRecordsSheetState extends State<MeditationRecordsSheet> {
     );
   }
 
+  void _showEditDialog(DailyMeditationModel record) {
+    final TextEditingController editController = TextEditingController(text: record.answerText);
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('조각 수정하기', style: TextStyle(fontWeight: FontWeight.bold)),
+        content: TextField(
+          controller: editController,
+          maxLines: 6,
+          decoration: InputDecoration(
+            border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            hintText: '수정할 내용을 입력하세요',
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: const Text('취소', style: TextStyle(color: Colors.grey)),
+          ),
+          TextButton(
+            onPressed: () async {
+              final newText = editController.text.trim();
+              if (newText.isNotEmpty) {
+                record.answerText = newText;
+                record.updatedAt = DateTime.now();
+                await LocalDb.isar.writeTxn(() async {
+                  await LocalDb.isar.dailyMeditationModels.put(record);
+                });
+                if (mounted) {
+                  Navigator.pop(context);
+                  _loadRecords();
+                }
+              }
+            },
+            child: const Text('저장', style: TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -125,9 +166,18 @@ class _MeditationRecordsSheetState extends State<MeditationRecordsSheet> {
                                         '${record.createdAt.year}년 ${record.createdAt.month}월 ${record.createdAt.day}일',
                                         style: const TextStyle(fontSize: 12, color: Colors.grey, fontWeight: FontWeight.bold),
                                       ),
-                                      InkWell(
-                                        onTap: () => _showDeleteConfirm(record),
-                                        child: const Icon(Icons.delete_outline, size: 20, color: Colors.red),
+                                      Row(
+                                        children: [
+                                          InkWell(
+                                            onTap: () => _showEditDialog(record),
+                                            child: const Icon(Icons.edit, size: 20, color: Colors.grey),
+                                          ),
+                                          const SizedBox(width: 16),
+                                          InkWell(
+                                            onTap: () => _showDeleteConfirm(record),
+                                            child: const Icon(Icons.delete_outline, size: 20, color: Colors.red),
+                                          ),
+                                        ],
                                       ),
                                     ],
                                   ),

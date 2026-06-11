@@ -287,9 +287,22 @@ class LibraryScreenState extends State<LibraryScreen> with SingleTickerProviderS
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    '${BibleRepository.getFullName(memo.bookName) ?? memo.bookName} ${memo.chapter}장 ${memo.verse}절',
-                    style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        '${BibleRepository.getFullName(memo.bookName) ?? memo.bookName} ${memo.chapter}장 ${memo.verse}절',
+                        style: TextStyle(fontWeight: FontWeight.bold, color: Theme.of(context).colorScheme.primary),
+                      ),
+                      IconButton(
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        icon: const Icon(Icons.menu_book, size: 20),
+                        color: Theme.of(context).colorScheme.primary,
+                        onPressed: () => widget.onNavigateToBible(memo.bookName, memo.chapter, memo.verse),
+                        tooltip: '성경 말씀 보기',
+                      ),
+                    ],
                   ),
                   const SizedBox(height: 8),
                   Text(memo.content),
@@ -315,56 +328,74 @@ class LibraryScreenState extends State<LibraryScreen> with SingleTickerProviderS
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
         final q = _questions[index];
-        return InkWell(
-          onTap: () {
-            showModalBottomSheet(
-              context: context,
-              isScrollControlled: true,
-              backgroundColor: Colors.transparent,
-              builder: (context) => QuestionDetailSheet(
-                question: q,
-                onUpdate: loadData,
-              ),
-            );
-          },
-          child: Card(
-            elevation: 2,
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Icon(q.isResolved ? Icons.check_circle : Icons.help_outline, 
-                           color: q.isResolved ? Colors.green : Colors.orange),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          q.questionText,
-                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                        ),
-                      ),
-                    ],
+        return Card(
+          elevation: 2,
+          clipBehavior: Clip.antiAlias,
+          child: ExpansionTile(
+            tilePadding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 4.0),
+            title: Row(
+              children: [
+                Icon(q.isResolved ? Icons.check_circle : Icons.help_outline, 
+                     color: q.isResolved ? Colors.green : Colors.orange),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    q.questionText,
+                    style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
                   ),
-                  if (q.bibleTags.isNotEmpty) ...[
-                    const SizedBox(height: 8),
-                    Wrap(
-                      spacing: 4,
-                      children: q.bibleTags.map((tag) => Chip(
-                        label: Text(tag, style: const TextStyle(fontSize: 12)),
-                        padding: EdgeInsets.zero,
-                      )).toList(),
-                    ),
-                  ],
-                  if (q.answerText != null && q.answerText!.isNotEmpty) ...[
-                    const Divider(),
-                    const Text('답변:', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
-                    Text(q.answerText!),
-                  ],
-                ],
-              ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.edit, size: 20, color: Colors.grey),
+                  onPressed: () {
+                    showModalBottomSheet(
+                      context: context,
+                      isScrollControlled: true,
+                      backgroundColor: Colors.transparent,
+                      builder: (context) => QuestionDetailSheet(
+                        question: q,
+                        onUpdate: loadData,
+                      ),
+                    );
+                  },
+                ),
+              ],
             ),
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    if (q.bibleTags.isNotEmpty) ...[
+                      Wrap(
+                        spacing: 8,
+                        children: q.bibleTags.map((tag) => ActionChip(
+                          label: Text(tag, style: const TextStyle(fontSize: 12)),
+                          avatar: const Icon(Icons.menu_book, size: 14),
+                          onPressed: () {
+                            try {
+                              final parts = tag.split(' ');
+                              final cv = parts[1].split(':');
+                              widget.onNavigateToBible(parts[0], int.parse(cv[0]), int.parse(cv[1]));
+                            } catch (_) {}
+                          },
+                        )).toList(),
+                      ),
+                      const SizedBox(height: 12),
+                    ],
+                    const Divider(),
+                    const SizedBox(height: 8),
+                    if (q.answerText != null && q.answerText!.isNotEmpty) ...[
+                      const Text('나의 답변', style: TextStyle(fontWeight: FontWeight.bold, color: Colors.grey)),
+                      const SizedBox(height: 8),
+                      Text(q.answerText!, style: const TextStyle(fontSize: 15, height: 1.5)),
+                    ] else ...[
+                      const Text('아직 작성된 답변이 없습니다.', style: TextStyle(color: Colors.grey, fontStyle: FontStyle.italic)),
+                    ],
+                  ],
+                ),
+              ),
+            ],
           ),
         );
       },
