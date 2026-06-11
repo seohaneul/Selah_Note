@@ -423,9 +423,19 @@ class LibraryScreenState extends State<LibraryScreen> with SingleTickerProviderS
                     children: [
                       CircleAvatar(backgroundColor: Color(hl.colorCode), radius: 8),
                       const SizedBox(width: 8),
-                      Text(
-                        '${BibleRepository.getFullName(hl.bookName) ?? hl.bookName} ${hl.chapter}장 ${hl.verse}절',
-                        style: const TextStyle(fontWeight: FontWeight.bold),
+                      Expanded(
+                        child: Text(
+                          '${BibleRepository.getFullName(hl.bookName) ?? hl.bookName} ${hl.chapter}장 ${hl.verse}절',
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      ),
+                      IconButton(
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(),
+                        icon: const Icon(Icons.menu_book, size: 20),
+                        color: Theme.of(context).colorScheme.primary,
+                        onPressed: () => widget.onNavigateToBible(hl.bookName, hl.chapter, hl.verse),
+                        tooltip: '성경 말씀 보기',
                       ),
                     ],
                   ),
